@@ -12,10 +12,13 @@
 #>
 [CmdletBinding()]
   param (
+    [Parameter(Mandatory = $true)][string]$oldserver
+    [Parameter(Mandatory = $true)][string]$newserver
     [Parameter(Mandatory = $true)][string]$oldpath,                                                                 # make sure all subfolders are readable to user running script
     [Parameter(Mandatory = $false)][string[]]$folderlist = @("Gruppenablage","usershome","images","usersprofile"),  # DO NOT COPY WORKFOLDERS! LET THE CLIENTS SYNC BACK!!
     [Parameter(Mandatory = $false)][string]$newpath = "E:\fileserv",                                                # location of files on new server
-    [Parameter(Mandatory = $false)][string]$serverlogheader = "$PSScriptRoot\serverlog-header.txt"                  # default is a file in script folder
+    [Parameter(Mandatory = $false)][string]$serverlogheader = "$PSScriptRoot\serverlog-header.txt",                  # default is a file in script folder
+    [Parameter(Mandatory = $false)][string]$temppath = "C:\Temp"  
   )
 
 #ab hier finger weg
@@ -62,6 +65,20 @@ function Write-Log
   Write-Host -Object $output -ForegroundColor $color
   Out-File -InputObject $output -FilePath $LogFile -Encoding utf8
 }
+
+function Migrte-DHCP
+{
+
+Export-DhcpServer -ComputerName $oldserver -File $temppath "\" + dhcp_export.xml
+Import-DhcpServer -ComputerName $newserver -File $temppath "\" + dhcp_export.xml -BackupPath $temppath -Force
+
+}
+
+
+
+
+
+
 #endregion functions
 
 #region main
