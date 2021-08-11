@@ -13,12 +13,11 @@
 [CmdletBinding()]
   param (
     [Parameter(Mandatory = $true)][string]$oldserver
-    [Parameter(Mandatory = $true)][string]$newserver
-    [Parameter(Mandatory = $true)][string]$oldpath,                                                                 # make sure all subfolders are readable to user running script
+    [Parameter(Mandatory = $true)][string]$rootshare,                                                                 # make sure all subfolders are readable to user running script
     [Parameter(Mandatory = $false)][string[]]$folderlist = @("Gruppenablage","usershome","images","usersprofile"),  # DO NOT COPY WORKFOLDERS! LET THE CLIENTS SYNC BACK!!
     [Parameter(Mandatory = $false)][string]$newpath = "E:\fileserv",                                                # location of files on new server
     [Parameter(Mandatory = $false)][string]$serverlogheader = "$PSScriptRoot\serverlog-header.txt",                  # default is a file in script folder
-    [Parameter(Mandatory = $false)][string]$temppath = "C:\Temp"  
+    [Parameter(Mandatory = $false)][string]$newserver
   )
 
 #ab hier finger weg
@@ -66,11 +65,11 @@ function Write-Log
   Out-File -InputObject $output -FilePath $LogFile -Encoding utf8
 }
 
-function Migrte-DHCP
+function Migrate-DHCP
 {
 
-Export-DhcpServer -ComputerName $oldserver -File $temppath "\" + dhcp_export.xml
-Import-DhcpServer -ComputerName $newserver -File $temppath "\" + dhcp_export.xml -BackupPath $temppath -Force
+Export-DhcpServer -ComputerName $oldserver -File $logfolder "\" + dhcp_export.xml
+Import-DhcpServer -ComputerName $newserver -File $logfolder "\" + dhcp_export.xml -BackupPath $logfolder -Force
 
 }
 
@@ -145,7 +144,7 @@ Write-Log -message "Each folder has its own log file for copied directories and 
 foreach ($folder in $folderlist)
 {
   # shared folder on on old server
-  $old = $oldpath + "\" + $folder
+  $old = "\\"+ $oldserver + "\"+ $rootshare + "\" + $folder
 
   # check if source is available, if not stop working on it
   if (-not(Test-Path -Path $old -PathType Container))
@@ -174,5 +173,10 @@ foreach ($folder in $folderlist)
     Write-Log -message $message -level INFO 
   }
 }
+
+
+
+
+
 
 #endregion main
