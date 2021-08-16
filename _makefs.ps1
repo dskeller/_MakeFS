@@ -187,4 +187,23 @@ if (-not (Test-Path -Path $tool -PathType Leaf)){
     }
 }
 
+# dhcp migration
+$dhcpbackup = $logfolder+'\'+$oldserver+"_DHCP.xml"
+Write-Log -message "Starting migrating DHCP configuration" -level INFO
+try{
+  Export-DhcpServer -ComputerName $oldserver -File $dhcpbackup -Force
+  try{
+    Import-DhcpServer -File $dhcpbackup -BackupPath $env:TEMP
+  }
+  catch
+  {
+    Write-Log -message "Import of DHCP configuration failed"
+  }
+}
+catch
+{
+  Write-Log -message "Export of DHCP configuration failed"
+}
+Write-Log -message "End migrating DHCP configuration" -level INFO
+
 #endregion main
