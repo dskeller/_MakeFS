@@ -23,7 +23,7 @@
 # #fingerab
 $logfolder              = "C:\logs"
 $LogFile                = $logfolder + "\" + $($MyInvocation.MyCommand.Name)
-$roboparams             = @('/COPYALL', '/MIR', '/MT:128', '/COPY:DATSOU', '/DCOPY:DAT', '/DST', '/R:1', '/W:2', '/NC', '/NP', '/J', '/SEC', '/B')
+$roboparams = @('/COPYALL','/MIR','/MT:128','/COPY:DATSOU','/DCOPY:DAT','/DST','/R:1','/W:2','/NC','/NP','/J','/SEC','/ZB','/BYTES','/XF Sync-UserProfile.log Thumbs.db ~$* ~*.tmp')
 $serverlogfile          = $env:ProgramData + "\Microsoft\Windows\Start Menu\Programs\StartUp\servlog.txt"
 $serverlogheadercontent = Get-Content -Path $serverlogheader
 
