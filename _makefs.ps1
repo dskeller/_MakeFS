@@ -12,7 +12,8 @@
 #>
 [CmdletBinding()]
   param (
-    [Parameter(Mandatory = $true)][string]$oldpath,                                                                 # make sure all subfolders are readable to user running script
+    [Parameter(Mandatory = $true)][string]$oldserver,                                                               # Name of the old server
+    [Parameter(Mandatory = $true)][string]$shareroot,                                                               # make sure all sub folders are readable to user running script
     [Parameter(Mandatory = $false)][string[]]$folderlist = @("Gruppenablage","usershome","images","usersprofile"),  # DO NOT COPY WORKFOLDERS! LET THE CLIENTS SYNC BACK!!
     [Parameter(Mandatory = $false)][string]$newpath = "E:\fileserv",                                                # location of files on new server
     [Parameter(Mandatory = $false)][string]$serverlogheader = "$PSScriptRoot\serverlog-header.txt"                  # default is a file in script folder
@@ -78,7 +79,7 @@ if (-not (Test-Path "$logfolder"))
   }
   catch
   {
-    Write-Host "ERROR: Unable to create Log-Folder $logfolder"
+    Write-Host "ERROR: Unable to create Log and Temp Folder $logfolder"
     Pause
     exit 1
   }
@@ -88,7 +89,7 @@ if (-not (Test-Path "$logfolder"))
 Write-Log -message "Starting script execution" -level INFO
 Write-Log -message "Log files location is: $logfolder" -level INFO
 
-# Create serverlog
+# Create server log
 if (-not (Test-Path "$serverlogfile" -PathType Leaf))
 {
   Write-Log -message "Starting serverlog creation setting file permission" -level INFO
@@ -116,7 +117,7 @@ Uninstall-WindowsFeature -name XPS-Viewer, PowerShell-v2, FS-SMB1-Client, FS-SMB
 Write-Log -message "Install-WindowsFeature -name FS-Fileserver, FS-SyncShareService, FS-Ressource-Manager, DHCP, Print-Server, Web-Mgmt-Console, Web-Scripting-Tools, RSAT-DHCP, RSAT-FSRM-Mgmt, RSAT-Print-Services, RSAT-ADDS-Tools, RSAT-AD-PowerShell, GPMC, Remote-Assistance -LogPath `"$logfolder\Install-WindowsFeature.log`"" -level INFO
 Install-WindowsFeature -name FS-Fileserver, FS-SyncShareService, FS-Ressource-Manager, DHCP, Print-Server, Web-Mgmt-Console, Web-Scripting-Tools, RSAT-DHCP, RSAT-FSRM-Mgmt, RSAT-Print-Services, RSAT-ADDS-Tools, RSAT-AD-PowerShell, GPMC, Remote-Assistance -LogPath "$logfolder\Install-WindowsFeature.log"
 
-# copy folderstructure with permissions
+# copy folder structure with permissions
 Write-Log -message "Starting copy process of old server to new server" -level INFO
 if (-not(Test-Path $newpath))
 {
@@ -128,7 +129,7 @@ Write-Log -message "Each folder has its own log file for copied directories and 
 foreach ($folder in $folderlist)
 {
   # shared folder on on old server
-  $old = $oldpath + "\" + $folder
+  $old = '\\'+$oldserver +'\\'+ $shareroot + '\' + $folder
 
   # check if source is available, if not stop working on it
   if (-not(Test-Path -Path $old -PathType Container))
@@ -144,7 +145,7 @@ foreach ($folder in $folderlist)
     # log file for each share
     $rLogFile = $logfolder + "\" + $folder + ".log"
 
-    # add logfile to robocopy params
+    # add log file location to robocopy params
     $arguments = $roboparams + "/UNILOG+:$rLogFile"
 
     # new folder name is the same as old folder name
