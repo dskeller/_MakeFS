@@ -16,7 +16,8 @@
     [Parameter(Mandatory = $true)][string]$shareroot,                                                               # make sure all sub folders are readable to user running script
     [Parameter(Mandatory = $false)][string[]]$folderlist = @("Gruppenablage","usershome","images","usersprofile"),  # DO NOT COPY WORKFOLDERS! LET THE CLIENTS SYNC BACK!!
     [Parameter(Mandatory = $false)][string]$newpath = "E:\fileserv",                                                # location of files on new server
-    [Parameter(Mandatory = $false)][string]$serverlogheader = "$PSScriptRoot\serverlog-header.txt"                  # default is a file in script folder
+    [Parameter(Mandatory = $false)][string]$serverlogheader = "$PSScriptRoot\serverlog-header.txt",                 # default is a file in script folder
+    [Parameter(Mandatory = $false, ParameterSetName = "InstallRaF")][bool]$WindowsFeatures = $false                 # Switch to install roles and features in parameter set so it does not run each time the script is executed
   )
 
 #########################################
@@ -111,14 +112,25 @@ if (-not (Test-Path "$serverlogfile" -PathType Leaf))
   Start-Process -FilePath "$env:windir\System32\icacls.exe" -ArgumentList "`"$serverlogfile`" /grant *S-1-5-32-545:M"
 }
 
-# remove unwanted/unsafe features
-Write-Log -message "Uninstall-WindowsFeature -name XPS-Viewer, PowerShell-v2, FS-SMB1-Client, FS-SMB1-Server, FS-SMB1 -LogPath `"$logfolder\Uninstall-WindowsFeature.log`"" -level INFO
-Uninstall-WindowsFeature -name XPS-Viewer, PowerShell-v2, FS-SMB1-Client, FS-SMB1-Server, FS-SMB1 -LogPath "$logfolder\Uninstall-WindowsFeature.log"
+if ($WindowsFeatures -eq $true)
+{
+  # remove unwanted/unsafe features
+  Write-Log -message "Uninstall-WindowsFeature -name XPS-Viewer, PowerShell-v2, FS-SMB1-Client, FS-SMB1-Server, FS-SMB1 -LogPath `"$logfolder\Uninstall-WindowsFeature.log`"" -level INFO
+  Uninstall-WindowsFeature -name XPS-Viewer, PowerShell-v2, FS-SMB1-Client, FS-SMB1-Server, FS-SMB1 -LogPath "$logfolder\Uninstall-WindowsFeature.log"
 
-# install needed features and restart server afterwards
-Write-Log -message "Install-WindowsFeature -name FS-Fileserver, FS-SyncShareService, FS-Ressource-Manager, DHCP, Print-Server, Web-Mgmt-Console, Web-Scripting-Tools, RSAT-DHCP, RSAT-FSRM-Mgmt, RSAT-Print-Services, RSAT-ADDS-Tools, RSAT-AD-PowerShell, GPMC, Remote-Assistance -LogPath `"$logfolder\Install-WindowsFeature.log`"" -level INFO
-Install-WindowsFeature -name FS-Fileserver, FS-SyncShareService, FS-Ressource-Manager, DHCP, Print-Server, Web-Mgmt-Console, Web-Scripting-Tools, RSAT-DHCP, RSAT-FSRM-Mgmt, RSAT-Print-Services, RSAT-ADDS-Tools, RSAT-AD-PowerShell, GPMC, Remote-Assistance -LogPath "$logfolder\Install-WindowsFeature.log"
+  # install needed features and restart server afterwards
+  Write-Log -message "Install-WindowsFeature -name FS-Fileserver, FS-SyncShareService, FS-Ressource-Manager, DHCP, Print-Server, Web-Mgmt-Console, Web-Scripting-Tools, RSAT-DHCP, RSAT-FSRM-Mgmt, RSAT-Print-Services, RSAT-ADDS-Tools, RSAT-AD-PowerShell, GPMC, Remote-Assistance -LogPath `"$logfolder\Install-WindowsFeature.log`"" -level INFO
+  Install-WindowsFeature -name FS-Fileserver, FS-SyncShareService, FS-Ressource-Manager, DHCP, Print-Server, Web-Mgmt-Console, Web-Scripting-Tools, RSAT-DHCP, RSAT-FSRM-Mgmt, RSAT-Print-Services, RSAT-ADDS-Tools, RSAT-AD-PowerShell, GPMC, Remote-Assistance -LogPath "$logfolder\Install-WindowsFeature.log"
 
+  # reboot system
+  Write-Log -message "Restarting server to disable/enable roles and features" -level INFO
+  # https://docs.microsoft.com/en-us/windows/win32/cimwin32prov/win32shutdowntracker-method-in-class-win32-operatingsystem
+  # Timeout, Comment, ReasonCode,  Flags (6 = Forced Reboot)
+  # https://docs.microsoft.com/en-us/windows/win32/shutdown/system-shutdown-reason-codes
+  # SHTDN_REASON_MAJOR_OPERATINGSYSTEM | SHTDN_REASON_MINOR_RECONFIG | SHTDN_REASON_FLAG_PLANNED
+  # 0x00020000                         | 0x00000004                  | 0x80000000
+  (Get-WmiObject -Class Win32_OperatingSystem).Win32Shutdowntracker(0, "Restart Server after (un)install of roles and features", 0x80020004, 6)
+}
 # copy folder structure with permissions
 Write-Log -message "Starting copy process of old server to new server" -level INFO
 if (-not(Test-Path $newpath))
