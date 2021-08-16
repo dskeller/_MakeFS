@@ -159,4 +159,32 @@ foreach ($folder in $folderlist)
   }
 }
 
+# print server migration
+
+# tool is part of server role, so check if tool is available is necessary before run
+
+$tool = "C:\windows\system32\spool\tools\PrintBrm.exe"
+if (-not (Test-Path -Path $tool -PathType Leaf)){
+    Write-Log -message "PrintBrm.exe not found. No print server migration" -level WARN
+}else{
+    $printshare = '\\'+$oldserver+'\print$'
+    if (-not (Test-Path -Path $printshare -PathType Container)){
+        Write-Log "`$print share on old server not reachable" -level ERROR
+    }else{
+        Set-Location -Path $(Split-Path -Path $tool -Parent)
+        $printbrmbackup = $logfolder+'\'+$oldserver+".printerExport"
+        Write-Log -message "Starting print server migration" -level INFO
+        if (Test-Path -Path $printbrmbackup -PathType Leaf){
+            Write-Log -message "Removing existing"
+            Remove-item -Path $printbrmbackup -Force
+        }
+        $export = & .\$(Split-Path -Path $tool -Leaf) -S "$oldserver" -B -F "$printbrmbackup" -O FORCE
+        $exportfile = $logfolder+'\printbrm-export.log'
+        Out-File -FilePath $exportfile -InputObject $export -Encoding utf8
+        $import = & .\$(Split-Path -Path $tool -Leaf) -R -F "$printbrmbackup" -O FORCE
+        $importfile = $logfolder+'\printbrm-import.log'
+        Out-File -FilePath $importfile -InputObject $import -Encoding utf8
+    }
+}
+
 #endregion main
