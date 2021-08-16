@@ -19,8 +19,10 @@
     [Parameter(Mandatory = $false)][string]$serverlogheader = "$PSScriptRoot\serverlog-header.txt"                  # default is a file in script folder
   )
 
-#ab hier finger weg
-# #fingerab
+#########################################
+#
+# no changes beyond this point
+#
 $logfolder              = "C:\logs"
 $LogFile                = $logfolder + "\" + $($MyInvocation.MyCommand.Name)
 $roboparams = @('/COPYALL','/MIR','/MT:128','/COPY:DATSOU','/DCOPY:DAT','/DST','/R:1','/W:2','/NC','/NP','/J','/SEC','/ZB','/BYTES','/XF Sync-UserProfile.log Thumbs.db ~$* ~*.tmp')
