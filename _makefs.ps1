@@ -9,6 +9,8 @@
   - DHCP
   - RSAT-Tools for roles and Active Directory
   - Sync Folders from old system to new
+  - Print Server Migration
+  - DHCP Server Migration
 #>
 [CmdletBinding()]
   param (
@@ -183,11 +185,10 @@ foreach ($share in $sharelist)
     Write-Log -message $message -level INFO 
   }
 }
-<#
+
 # print server migration
 
 # tool is part of server role, so check if tool is available is necessary before run
-
 $tool = "C:\windows\system32\spool\tools\PrintBrm.exe"
 if (-not (Test-Path -Path $tool -PathType Leaf)){
     Write-Log -message "PrintBrm.exe not found. No print server migration" -level WARN
@@ -213,8 +214,7 @@ if (-not (Test-Path -Path $tool -PathType Leaf)){
         Set-Location $cpath.path
     }
 }
-#>
-<#
+
 # dhcp migration
 $dhcpbackup = $logfolder+'\'+$oldserver+"_DHCP.xml"
 Write-Log -message "Starting migrating DHCP configuration" -level INFO
@@ -233,6 +233,6 @@ catch
   Write-Log -message "Export of DHCP configuration failed"
 }
 Write-Log -message "End migrating DHCP configuration" -level INFO
-#>
+
 Write-Log -message "End script execution" -level INFO
 #endregion main
