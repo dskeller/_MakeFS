@@ -15,24 +15,24 @@
 #>
 [CmdletBinding()]
   param (
-    [Parameter(Mandatory = $true)][string]$oldserver,                                                                                                       # Name of the old server
-    [Parameter(Mandatory = $false)][string]$serverlogheader = "$PSScriptRoot\serverlog-header.txt",                                                         # default is a file in script folder
-    [Parameter(Mandatory = $false, ParameterSetName = "Serverlog")][bool]$Serverlog        = $false,                                                        # Switch to create serverlog file in startup
-    [Parameter(Mandatory = $false, ParameterSetName = "Fileservice")][bool]$FileService    = $false,                                                        # Switch to copy files
-    [Parameter(Mandatory = $false, ParameterSetName = "Fileservice")][string[]]$sharelist  = @("Gruppenablage","usershome$","images$","usersprofile$"),     # List of shares on old server
-    [Parameter(Mandatory = $false, ParameterSetName = "Fileservice")][string]$newpath      = "E:\fileserv",                                                 # location of files on local server
-    [Parameter(Mandatory = $false, ParameterSetName = "InstallRaF")][bool]$WindowsFeatures = $false,                                                        # Switch to install roles and features in parameter set so it does not run each time the script is executed
-    [Parameter(Mandatory = $false, ParameterSetName = "PrintService")][bool]$PrintService  = $false,                                                        # Switch to migrate print service
-    [Parameter(Mandatory = $false, ParameterSetName = "DHCPService")][bool]$DHCPService    = $false,                                                        # Switch to migrate dhcp service
-    [Parameter(Mandatory = $false, ParameterSetName = "Certificate")][bool]$Certificate    = $false,                                                        # Switch to generate certificate request
-    [Parameter(Mandatory = $false, ParameterSetName = "Certificate")][string]$FQDN         = [System.Net.Dns]::GetHostByName(($env:computerName)).HostName, # Server FQDN for certificate
-    [Parameter(Mandatory = $true, ParameterSetName = "Certificate")][string]$Mail,                                                                          # Mail, for certificate renew or revoke
-    [Parameter(Mandatory = $true, ParameterSetName = "Certificate")][string]$Organization,                                                                  # Organization of the new server for certificate
-    [Parameter(Mandatory = $true, ParameterSetName = "Certificate")][string]$OrganizationalUnit,                                                            # Organizational unit of the new server for certificate
-    [Parameter(Mandatory = $true, ParameterSetName = "Certificate")][string]$City,                                                                          # City, the new server is located for certificate
-    [Parameter(Mandatory = $true, ParameterSetName = "Certificate")][string]$State,                                                                         # State, the new server is located for certificate
-    [Parameter(Mandatory = $true, ParameterSetName = "Certificate")][string]$Country,                                                                       # Country, the new server is located
-    [Parameter(Mandatory = $false, ParameterSetName = "All")][bool]$All                    = $false                                                         # Switch to do all migration steps excl. install roles and features
+    [Parameter(Mandatory = $true)][string]$oldserver,                                                                        # Name of the old server
+    [Parameter(Mandatory = $false)][bool]$Serverlog         = $false,                                                        # Switch to create serverlog file in startup
+    [Parameter(Mandatory = $false)][string]$serverlogheader = "$PSScriptRoot\serverlog-header.txt",                          # default is a file in script folder
+    [Parameter(Mandatory = $false)][bool]$FileService       = $false,                                                        # Switch to copy files
+    [Parameter(Mandatory = $false)][string[]]$sharelist     = @("Gruppenablage","usershome$","images$","usersprofile$"),     # List of shares on old server
+    [Parameter(Mandatory = $false)][string]$newpath         = "E:\fileserv",                                                 # location of files on local server
+    [Parameter(Mandatory = $false)][bool]$WindowsFeatures   = $false,                                                        # Switch to install roles and features in parameter set so it does not run each time the script is executed
+    [Parameter(Mandatory = $false)][bool]$PrintService      = $false,                                                        # Switch to migrate print service
+    [Parameter(Mandatory = $false)][bool]$DHCPService       = $false,                                                        # Switch to migrate dhcp service
+    [Parameter(Mandatory = $false)][bool]$Certificate       = $false,                                                        # Switch to generate certificate request
+    [Parameter(Mandatory = $false)][string]$FQDN            = [System.Net.Dns]::GetHostByName(($env:computerName)).HostName, # Server FQDN for certificate
+    [Parameter(Mandatory = $true)][string]$Mail,                                                                             # Mail, for certificate renew or revoke
+    [Parameter(Mandatory = $true)][string]$Organization,                                                                     # Organization of the new server for certificate
+    [Parameter(Mandatory = $true)][string]$OrganizationalUnit,                                                               # Organizational unit of the new server for certificate
+    [Parameter(Mandatory = $true)][string]$City,                                                                             # City, the new server is located for certificate
+    [Parameter(Mandatory = $false)][string]$State           = "Schleswig-Holstein",                                          # State, the new server is located for certificate
+    [Parameter(Mandatory = $false)][string]$Country         = "DE",                                                          # Country, the new server is located
+    [Parameter(Mandatory = $false)][bool]$All               = $false                                                         # Switch to do all migration steps excl. install roles and features
   )
 
 #########################################
@@ -152,7 +152,16 @@ if ($WindowsFeatures -eq $true)
   # https://docs.microsoft.com/en-us/windows/win32/shutdown/system-shutdown-reason-codes
   # SHTDN_REASON_MAJOR_OPERATINGSYSTEM | SHTDN_REASON_MINOR_RECONFIG | SHTDN_REASON_FLAG_PLANNED
   # 0x00020000                         | 0x00000004                  | 0x80000000
-  (Get-WmiObject -Class Win32_OperatingSystem).Win32Shutdowntracker(0, "Restart Server after (un)install of roles and features", 0x80020004, 6)
+  # adding clean-ui (https://devblogs.microsoft.com/oldnewthing/20100831-00/?p=12993) 0x04000000
+  # -> 0x80020004
+  # -> [uint32]"0x84020004"
+  $rargs = @{
+    Timeout    = [System.UInt32]0
+    Comment    = 'This is a test'
+    ReasonCode = [System.UInt32]2214723588
+    Flags      = 6
+  }
+  Invoke-CimMethod -Query 'SELECT * FROM Win32_OperatingSystem' -MethodName 'Win32ShutdownTracker' –Arguments $rargs
 }
 else
 {
