@@ -21,8 +21,13 @@ Preparation (old server is needed also not used):
 ```powershell
 .\Make_FS.ps1 -oldserver "FS-01" -Serverlog $true -WindowsFeatures $true
 ```
-The server auto reboots after install of roles and features.<br><br><br>
-The first migration only of file shares and print service
+The server auto reboots after install of roles and features.<br><br>
+Second run to migrate all services to local system
+```powershell
+.\Make_FS.ps1 -oldserver "FS-01" -Serverlog $true -WindowsFeatures $true
+```
+<br><br><br>
+migration only of file shares and print service
 ```powershell
 .\_MakeFS.ps1 -oldserver "FS-01" -FileService $true -PrintService $true 
 ```
