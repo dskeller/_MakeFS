@@ -14,11 +14,19 @@
 #>
 [CmdletBinding()]
   param (
-    [Parameter(Mandatory = $true)][string]$oldserver,                                                               # Name of the old server
-    [Parameter(Mandatory = $true)][string[]]$sharelist=@("Gruppenablage","usershome$","images$","usersprofile$"),   # List of shares on old server
-    [Parameter(Mandatory = $false)][string]$newpath = "E:\fileserv",                                                # location of files on local server
-    [Parameter(Mandatory = $false)][string]$serverlogheader = "$PSScriptRoot\serverlog-header.txt",                 # default is a file in script folder
-    [Parameter(Mandatory = $false, ParameterSetName = "InstallRaF")][bool]$WindowsFeatures = $false                 # Switch to install roles and features in parameter set so it does not run each time the script is executed
+    [Parameter(Mandatory = $true)][string]$oldserver,                                                                                             # Name of the old server
+    [Parameter(Mandatory = $true)][string[]]$sharelist=@("Gruppenablage","usershome$","images$","usersprofile$"),                                 # List of shares on old server
+    [Parameter(Mandatory = $false)][string]$newpath = "E:\fileserv",                                                                              # location of files on local server
+    [Parameter(Mandatory = $false)][string]$serverlogheader = "$PSScriptRoot\serverlog-header.txt",                                               # default is a file in script folder
+    [Parameter(Mandatory = $false, ParameterSetName = "InstallRaF")][bool]$WindowsFeatures = $false,                                              # Switch to install roles and features in parameter set so it does not run each time the script is executed
+    [Parameter(Mandatory = $false, ParameterSetName = "Certificate")][bool]$Certificate = $false,                                                 # Parameter to decide if computer certificate should be generated
+    [Parameter(Mandatory = $true, ParameterSetName = "Certificate")][string]$City,                                                                # City, the new server is located for certificate
+    [Parameter(Mandatory = $true, ParameterSetName = "Certificate")][string]$Mail,                                                                # Mail, for certificate renew or revoke
+    [Parameter(Mandatory = $true, ParameterSetName = "Certificate")][string]$State,                                                               # State, the new server is located for certificate
+    [Parameter(Mandatory = $true, ParameterSetName = "Certificate")][string]$Country,                                                             # Country, the new server is located
+    [Parameter(Mandatory = $true, ParameterSetName = "Certificate")][string]$Organization,                                                        # Organization of the new server for certificate
+    [Parameter(Mandatory = $true, ParameterSetName = "Certificate")][string]$OrganizationalUnit,                                                  # Organizational unit of the new server for certificate
+    [Parameter(Mandatory = $false, ParameterSetName = "Certificate")][string]$FQDN=[System.Net.Dns]::GetHostByName(($env:computerName)).HostName  # Server FQDN for certificate
   )
 
 #########################################
@@ -28,7 +36,7 @@
 $logfolder              = "C:\logs\Migration"
 $LogFile                = $logfolder + "\" + $($($MyInvocation.MyCommand.Name).Replace('.ps1','.log'))
 $roboparams = @('/COPYALL','/MIR','/MT:128','/COPY:DATSOU','/DCOPY:DAT','/DST','/R:1','/W:2','/NC','/NP','/J','/SEC','/ZB','/BYTES','/XF Sync-UserProfile.log Thumbs.db ~$* ~*.tmp','/XD Der-europass-macht-Schule')
-$serverlogfile          = $env:ProgramData + "\Microsoft\Windows\Start Menu\Programs\StartUp\servlog.txt"
+$serverlogfile          = $env:ProgramData + "\Microsoft\Windows\Start Menu\Programs\StartUp\serverlog.txt"
 $serverlogheadercontent = Get-Content -Path $serverlogheader
 
 #region functions
@@ -233,6 +241,53 @@ catch
   Write-Log -message "Export of DHCP configuration failed"
 }
 Write-Log -message "End migrating DHCP configuration" -level INFO
+
+
+#region certificate
+if ($Certificate -eq $true){
+
+  # generate INF for request with specified variables
+  Write-Log -message "Generating certificate request" -level INFO
+  $INFFile = $logfolder+'\'+$FQDN+'_'+$((Get-Date).ToString('yyyyMMdd'))+'.INF'
+  $REQFile = $logfolder+'\'+$FQDN+'_'+$((Get-Date).ToString('yyyyMMdd'))+'_CSR.REQ'
+  
+  $Signature = '$Windows NT$'
+  $SANListe = @("dns=$CertName")
+
+  $INF = @"
+  [Version]
+  Signature= "$Signature" 
+   
+  [NewRequest]
+  Exportable = TRUE                                                      ; TRUE = Private key is exportable
+  KeyLength = 4096                                                       ; Valid key sizes: 1024, 2048, 4096, 8192, 16384
+  KeySpec = 1                                                            ; Key Exchange – Required for encryption
+  MachineKeySet = TRUE                                                   ; The default is false.
+  PrivateKeyArchive = FALSE                                              ; The PrivateKeyArchive setting works only if the corresponding RequestType is set to "CMC"
+  ProviderName = "Microsoft Enhanced RSA and AES Cryptographic Provider"
+  ProviderType = 24                                                      ; PROV_RSA_AES
+  RequestType = PKCS10                                                   ; Determines the standard that is used to generate and send the certificate request (PKCS10 -- 1)
+  SMIME = False                                                          ; Refer to symmetric encryption algorithms that may be used by Secure Multipurpose Internet Mail Extensions (S/MIME)
+  Subject = "E=$Mail, CN=$FQDN, OU=$OrganizationalUnit, O=$Organization, L=$City, S=$State, C=$Country"
+  UseExistingKeySet = FALSE
+  UserProtected = FALSE
+   
+  [Extensions]
+  ; If your client operating system is Windows Server 2008, Windows Server 2008 R2, Windows Vista, or Windows 7
+  ; SANs can be included in the Extensions section by using the following text format. Note 2.5.29.17 is the OID for a SAN extension.
+  ; Multiple alternative names must be separated by an ampersand (&).
+  2.5.29.17 = "{text}"
+"@
+  $SANListe | ForEach-Object { $INF += "_continue_ = `"$($_)&`"`r`n" }
+  $INF += "`r`n; EOF`r`n"
+
+  $INF | Out-File -FilePath $INFFile -Force
+  & certreq.exe -New $INFFile $REQFile
+
+  Write-Log -message "Certificate Request has been generated" -level INFO
+}
+
+#endregion
 
 Write-Log -message "End script execution" -level INFO
 #endregion main
