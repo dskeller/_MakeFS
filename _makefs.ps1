@@ -13,9 +13,8 @@
 [CmdletBinding()]
   param (
     [Parameter(Mandatory = $true)][string]$oldserver,                                                               # Name of the old server
-    [Parameter(Mandatory = $true)][string]$shareroot,                                                               # make sure all sub folders are readable to user running script
-    [Parameter(Mandatory = $false)][string[]]$folderlist = @("Gruppenablage","usershome","images","usersprofile"),  # DO NOT COPY WORKFOLDERS! LET THE CLIENTS SYNC BACK!!
-    [Parameter(Mandatory = $false)][string]$newpath = "E:\fileserv",                                                # location of files on new server
+    [Parameter(Mandatory = $true)][string[]]$sharelist=@("Gruppenablage","usershome$","images$","usersprofile$"),   # List of shares on old server
+    [Parameter(Mandatory = $false)][string]$newpath = "E:\fileserv",                                                # location of files on local server
     [Parameter(Mandatory = $false)][string]$serverlogheader = "$PSScriptRoot\serverlog-header.txt",                 # default is a file in script folder
     [Parameter(Mandatory = $false, ParameterSetName = "InstallRaF")][bool]$WindowsFeatures = $false                 # Switch to install roles and features in parameter set so it does not run each time the script is executed
   )
@@ -136,14 +135,22 @@ Write-Log -message "Starting copy process of old server to new server" -level IN
 if (-not(Test-Path $newpath))
 {
   Write-Log -message "New-Item -Path '$newpath' -ItemType Directory -Force" -level INFO
-  New-Item -Path "$newpath" -ItemType Directory -Force
+  try
+  {
+    New-Item -Path "$newpath" -ItemType Directory -Force
+  }
+  catch
+  {
+    Write-Log "Unable to create path" -level ERROR
+    exit 1
+  }
 }
 
-Write-Log -message "Each folder has its own log file for copied directories and files" -level INFO
-foreach ($folder in $folderlist)
+Write-Log -message "Each share has its own log file for copied directories and files" -level INFO
+foreach ($share in $sharelist)
 {
   # shared folder on on old server
-  $old = '\\'+$oldserver +'\\'+ $shareroot + '\' + $folder
+  $old = '\\'+$oldserver +'\'+ $share
 
   # check if source is available, if not stop working on it
   if (-not(Test-Path -Path $old -PathType Container))
@@ -153,6 +160,9 @@ foreach ($folder in $folderlist)
   }
   else
   {
+    #get name for folder on local server
+    $folder = Split-Path $(Get-CimInstance -ComputerName $oldserver -ClassName win32_share -Filter "Name = '$share'" | Select-Object -Property Path -ExpandProperty Path) -Leaf
+
     # new local folder with share name
     $new = $newpath + "\" + $folder
 
