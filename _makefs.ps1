@@ -13,9 +13,8 @@
 [CmdletBinding()]
   param (
     [Parameter(Mandatory = $true)][string]$oldserver,                                                               # Name of the old server
-    [Parameter(Mandatory = $true)][string]$shareroot,                                                               # make sure all sub folders are readable to user running script
-    [Parameter(Mandatory = $false)][string[]]$folderlist = @("Gruppenablage","usershome","images","usersprofile"),  # DO NOT COPY WORKFOLDERS! LET THE CLIENTS SYNC BACK!!
-    [Parameter(Mandatory = $false)][string]$newpath = "E:\fileserv",                                                # location of files on new server
+    [Parameter(Mandatory = $true)][string[]]$sharelist=@("Gruppenablage","usershome$","images$","usersprofile$"),   # List of shares on old server
+    [Parameter(Mandatory = $false)][string]$newpath = "E:\fileserv",                                                # location of files on local server
     [Parameter(Mandatory = $false)][string]$serverlogheader = "$PSScriptRoot\serverlog-header.txt",                 # default is a file in script folder
     [Parameter(Mandatory = $false, ParameterSetName = "InstallRaF")][bool]$WindowsFeatures = $false                 # Switch to install roles and features in parameter set so it does not run each time the script is executed
   )
@@ -24,9 +23,9 @@
 #
 # no changes beyond this point
 #
-$logfolder              = "C:\logs"
-$LogFile                = $logfolder + "\" + $($MyInvocation.MyCommand.Name)
-$roboparams = @('/COPYALL','/MIR','/MT:128','/COPY:DATSOU','/DCOPY:DAT','/DST','/R:1','/W:2','/NC','/NP','/J','/SEC','/ZB','/BYTES','/XF Sync-UserProfile.log Thumbs.db ~$* ~*.tmp')
+$logfolder              = "C:\logs\Migration"
+$LogFile                = $logfolder + "\" + $($($MyInvocation.MyCommand.Name).Replace('.ps1','.log'))
+$roboparams = @('/COPYALL','/MIR','/MT:128','/COPY:DATSOU','/DCOPY:DAT','/DST','/R:1','/W:2','/NC','/NP','/J','/SEC','/ZB','/BYTES','/XF Sync-UserProfile.log Thumbs.db ~$* ~*.tmp','/XD Der-europass-macht-Schule')
 $serverlogfile          = $env:ProgramData + "\Microsoft\Windows\Start Menu\Programs\StartUp\servlog.txt"
 $serverlogheadercontent = Get-Content -Path $serverlogheader
 
@@ -64,7 +63,7 @@ function Write-Log
   $date = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
   $output = $date + " " + $level + " : " + $message
   Write-Host -Object $output -ForegroundColor $color
-  Out-File -InputObject $output -FilePath $LogFile -Encoding utf8
+  Out-File -InputObject $output -FilePath $LogFile -Encoding utf8 -Append
 }
 #endregion functions
 
@@ -95,7 +94,7 @@ Write-Log -message "Log files location is: $logfolder" -level INFO
 # Create server log
 if (-not (Test-Path "$serverlogfile" -PathType Leaf))
 {
-  Write-Log -message "Starting serverlog creation setting file permission" -level INFO
+  Write-Log -message "Starting serverlog creation and setting file permission" -level INFO
   try
   {
     New-Item -Path "$serverlogfile" -ItemType File -Force 
@@ -108,7 +107,7 @@ if (-not (Test-Path "$serverlogfile" -PathType Leaf))
     Write-Log -message "Unable to create $serverlogfile" -level ERROR
   }
 }else{
-  Write-Log -message "'$serverlogfile' already exists. Checking permissions" -level INFO
+  Write-Log -message "'$serverlogfile' already exists. Setting permissions to User:M" -level INFO
   Start-Process -FilePath "$env:windir\System32\icacls.exe" -ArgumentList "`"$serverlogfile`" /grant *S-1-5-32-545:M"
 }
 
@@ -131,19 +130,28 @@ if ($WindowsFeatures -eq $true)
   # 0x00020000                         | 0x00000004                  | 0x80000000
   (Get-WmiObject -Class Win32_OperatingSystem).Win32Shutdowntracker(0, "Restart Server after (un)install of roles and features", 0x80020004, 6)
 }
+
 # copy folder structure with permissions
-Write-Log -message "Starting copy process of old server to new server" -level INFO
+Write-Log -message "Starting copy process of '$oldserver' to '$newpath'" -level INFO
 if (-not(Test-Path $newpath))
 {
   Write-Log -message "New-Item -Path '$newpath' -ItemType Directory -Force" -level INFO
-  New-Item -Path "$newpath" -ItemType Directory -Force
+  try
+  {
+    New-Item -Path "$newpath" -ItemType Directory -Force
+  }
+  catch
+  {
+    Write-Log "Unable to create path" -level ERROR
+    exit 1
+  }
 }
 
-Write-Log -message "Each folder has its own log file for copied directories and files" -level INFO
-foreach ($folder in $folderlist)
+Write-Log -message "Each share has its own log file for copied directories and files" -level INFO
+foreach ($share in $sharelist)
 {
   # shared folder on on old server
-  $old = '\\'+$oldserver +'\\'+ $shareroot + '\' + $folder
+  $old = '\\'+$oldserver +'\'+ $share
 
   # check if source is available, if not stop working on it
   if (-not(Test-Path -Path $old -PathType Container))
@@ -153,6 +161,9 @@ foreach ($folder in $folderlist)
   }
   else
   {
+    #get name for folder on local server
+    $folder = Split-Path $(Get-CimInstance -ComputerName $oldserver -ClassName win32_share -Filter "Name = '$share'" | Select-Object -Property Path -ExpandProperty Path) -Leaf
+
     # new local folder with share name
     $new = $newpath + "\" + $folder
 
@@ -167,12 +178,12 @@ foreach ($folder in $folderlist)
     Write-Log $message -level INFO
     Write-Log -message "Logfile is: $rLogFile" -level INFO
     Write-Log -message "Start-Process -Wait -FilePath `"$env:windir\System32\Robocopy.exe`" -ArgumentList `"$old $new $arguments`"" -level INFO
-    Start-Process -Wait -FilePath "$env:windir\System32\Robocopy.exe" -ArgumentList "$old $new $arguments"
+    Start-Process -NoNewWindow -Wait -FilePath "$env:windir\System32\Robocopy.exe" -ArgumentList "`"$old`" `"$new`" $arguments"
     $message = "Finished copy '" + $old + "' -> '" + $new + "'"
     Write-Log -message $message -level INFO 
   }
 }
-
+<#
 # print server migration
 
 # tool is part of server role, so check if tool is available is necessary before run
@@ -185,6 +196,7 @@ if (-not (Test-Path -Path $tool -PathType Leaf)){
     if (-not (Test-Path -Path $printshare -PathType Container)){
         Write-Log "`$print share on old server not reachable" -level ERROR
     }else{
+        $cpath = Get-Location
         Set-Location -Path $(Split-Path -Path $tool -Parent)
         $printbrmbackup = $logfolder+'\'+$oldserver+".printerExport"
         Write-Log -message "Starting print server migration" -level INFO
@@ -198,9 +210,11 @@ if (-not (Test-Path -Path $tool -PathType Leaf)){
         $import = & .\$(Split-Path -Path $tool -Leaf) -R -F "$printbrmbackup" -O FORCE
         $importfile = $logfolder+'\printbrm-import.log'
         Out-File -FilePath $importfile -InputObject $import -Encoding utf8
+        Set-Location $cpath.path
     }
 }
-
+#>
+<#
 # dhcp migration
 $dhcpbackup = $logfolder+'\'+$oldserver+"_DHCP.xml"
 Write-Log -message "Starting migrating DHCP configuration" -level INFO
@@ -219,5 +233,6 @@ catch
   Write-Log -message "Export of DHCP configuration failed"
 }
 Write-Log -message "End migrating DHCP configuration" -level INFO
-
+#>
+Write-Log -message "End script execution" -level INFO
 #endregion main
