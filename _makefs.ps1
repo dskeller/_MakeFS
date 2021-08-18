@@ -16,15 +16,15 @@
 [CmdletBinding()]
   param (
     [Parameter(Mandatory = $true)][string]$oldserver,                                                                        # Name of the old server
-    [Parameter(Mandatory = $false)][bool]$Serverlog         = $false,                                                        # Switch to create serverlog file in startup
+    [Parameter(Mandatory = $false)][switch]$Serverlog         = $false,                                                      # Switch to create serverlog file in startup
     [Parameter(Mandatory = $false)][string]$serverlogheader = "$PSScriptRoot\serverlog-header.txt",                          # default is a file in script folder
-    [Parameter(Mandatory = $false)][bool]$FileService       = $false,                                                        # Switch to copy files
+    [Parameter(Mandatory = $false)][switch]$FileService       = $false,                                                      # Switch to copy files
     [Parameter(Mandatory = $false)][string[]]$sharelist     = @("Gruppenablage","usershome$","images$","usersprofile$"),     # List of shares on old server
     [Parameter(Mandatory = $false)][string]$newpath         = "E:\fileserv",                                                 # location of files on local server
-    [Parameter(Mandatory = $false)][bool]$WindowsFeatures   = $false,                                                        # Switch to install roles and features in parameter set so it does not run each time the script is executed
-    [Parameter(Mandatory = $false)][bool]$PrintService      = $false,                                                        # Switch to migrate print service
-    [Parameter(Mandatory = $false)][bool]$DHCPService       = $false,                                                        # Switch to migrate dhcp service
-    [Parameter(Mandatory = $false)][bool]$Certificate       = $false,                                                        # Switch to generate certificate request
+    [Parameter(Mandatory = $false)][switch]$WindowsFeatures   = $false,                                                      # Switch to install roles and features in parameter set so it does not run each time the script is executed
+    [Parameter(Mandatory = $false)][switch]$PrintService      = $false,                                                      # Switch to migrate print service
+    [Parameter(Mandatory = $false)][switch]$DHCPService       = $false,                                                      # Switch to migrate dhcp service
+    [Parameter(Mandatory = $false)][switch]$Certificate       = $false,                                                      # Switch to generate certificate request
     [Parameter(Mandatory = $false)][string]$FQDN            = [System.Net.Dns]::GetHostByName(($env:computerName)).HostName, # Server FQDN for certificate
     [Parameter(Mandatory = $true)][string]$Mail,                                                                             # Mail, for certificate renew or revoke
     [Parameter(Mandatory = $true)][string]$Organization,                                                                     # Organization of the new server for certificate
@@ -32,7 +32,7 @@
     [Parameter(Mandatory = $true)][string]$City,                                                                             # City, the new server is located for certificate
     [Parameter(Mandatory = $false)][string]$State           = "Schleswig-Holstein",                                          # State, the new server is located for certificate
     [Parameter(Mandatory = $false)][string]$Country         = "DE",                                                          # Country, the new server is located
-    [Parameter(Mandatory = $false)][bool]$All               = $false                                                         # Switch to do all migration steps excl. install roles and features
+    [Parameter(Mandatory = $false)][switch]$All               = $false                                                       # Switch to do all migration steps excl. install roles and features
   )
 
 #########################################
@@ -108,7 +108,7 @@ Write-Log -message "Starting script execution" -level INFO
 Write-Log -message "Log files location is: $logfolder" -level INFO
 
 #region serverlog
-if (($Serverlog -eq $true)-or($All -eq $true)){
+if (($Serverlog.IsPresent -eq $true)-or($All.IsPresent -eq $true)){
   if (-not (Test-Path "$serverlogfile" -PathType Leaf))
   {
     Write-Log -message "Starting serverlog creation and setting file permission" -level INFO
@@ -135,7 +135,7 @@ else
 #endregion serverlog
 
 #region windowsRaF
-if ($WindowsFeatures -eq $true)
+if ($WindowsFeatures.IsPresent -eq $true)
 {
   # remove unwanted/unsafe features
   Write-Log -message "Uninstall-WindowsFeature -name XPS-Viewer, PowerShell-v2, FS-SMB1-Client, FS-SMB1-Server, FS-SMB1 -LogPath `"$logfolder\Uninstall-WindowsFeature.log`"" -level INFO
@@ -171,7 +171,7 @@ else
 #endregion windowsRaF
 
 #region fileservice
-if (($FileService -eq $true)-or($All -eq $true)){
+if (($FileService.IsPresent -eq $true)-or($All.IsPresent -eq $true)){
   # copy folder structure with permissions
   Write-Log -message "Starting copy process of '$oldserver' to '$newpath'" -level INFO
   if (-not(Test-Path $newpath))
@@ -232,7 +232,7 @@ else
 #endregion fileservice
 
 #region printservice
-if (($PrintService) -eq $true -or ($All -eq $true)){
+if (($PrintService.IsPresent -eq $true) -or ($All.IsPresent -eq $true)){
   # print server migration
 
   # tool is part of server role, so check if tool is available is necessary before run
@@ -276,7 +276,7 @@ else
 #endregion printservice
 
 #region DHCP
-if (($DHCPService -eq $true) -or($All -eq $true))
+if (($DHCPService.IsPresent -eq $true) -or($All.IsPresent -eq $true))
 {
   $dhcpbackup = $logfolder+'\'+$oldserver+"_DHCP.xml"
   Write-Log -message "Starting migrating DHCP configuration" -level INFO
@@ -305,7 +305,7 @@ else
 #endregion DHCP
 
 #region certificate
-if (($Certificate -eq $true)-or($All -eq $true))
+if (($Certificate.IsPresent -eq $true)-or($All.IsPresent -eq $true))
 {
   # generate INF for request with specified variables
   Write-Log -message "Generating certificate request" -level INFO
