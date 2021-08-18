@@ -313,7 +313,7 @@ if (($Certificate.IsPresent -eq $true)-or($All.IsPresent -eq $true))
   $REQFile = $logfolder+'\'+$FQDN+'_'+$((Get-Date).ToString('yyyyMMdd'))+'_CSR.REQ'
   
   $Signature = '$Windows NT$'
-  $SANListe = @("dns=$CertName")
+  $SANList = @("dns=$CertName")
 
   $INF = @"
   [Version]
@@ -339,7 +339,7 @@ if (($Certificate.IsPresent -eq $true)-or($All.IsPresent -eq $true))
   ; Multiple alternative names must be separated by an ampersand (&).
   2.5.29.17 = "{text}"
 "@
-  $SANListe | ForEach-Object { $INF += "_continue_ = `"$($_)&`"`r`n" }
+  $SANList | ForEach-Object { $INF += "_continue_ = `"$($_)&`"`r`n" }
   $INF += "`r`n; EOF`r`n"
 
   $INF | Out-File -FilePath $INFFile -Force
