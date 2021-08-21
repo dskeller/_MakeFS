@@ -200,7 +200,7 @@ if ($UninstallWindowsFeatures.IsPresent -eq $true)
     ReasonCode = [System.UInt32]2214723588
     Flags      = 6
   }
-  Invoke-CimMethod -Query 'SELECT * FROM Win32_OperatingSystem' -MethodName 'Win32ShutdownTracker' –Arguments $rargs
+  Invoke-CimMethod -Query 'SELECT * FROM Win32_OperatingSystem' -MethodName 'Win32ShutdownTracker' -Arguments $rargs
 }
 else
 {
@@ -221,7 +221,7 @@ if ($InstallWindowsFeatures.IsPresent -eq $true)
     ReasonCode = [System.UInt32]2214723588
     Flags      = 6
   }
-  Invoke-CimMethod -Query 'SELECT * FROM Win32_OperatingSystem' -MethodName 'Win32ShutdownTracker' –Arguments $rargs
+  Invoke-CimMethod -Query 'SELECT * FROM Win32_OperatingSystem' -MethodName 'Win32ShutdownTracker' -Arguments $rargs
 }
 #endregion windowsRaF
 
