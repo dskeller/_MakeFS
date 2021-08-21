@@ -13,26 +13,59 @@
   - DHCP Server Migration
   - Computer certificate request for work folder service
 #>
-[CmdletBinding()]
+[CmdletBinding(DefaultParameterSetName='None')]
   param (
-    [Parameter(Mandatory = $true)][string]$oldserver,                                                                        # Name of the old server
-    [Parameter(Mandatory = $false)][switch]$Serverlog         = $false,                                                      # Switch to create serverlog file in startup
-    [Parameter(Mandatory = $false)][string]$serverlogheader = "$PSScriptRoot\serverlog-header.txt",                          # default is a file in script folder
-    [Parameter(Mandatory = $false)][switch]$FileService       = $false,                                                      # Switch to copy files
-    [Parameter(Mandatory = $false)][string[]]$sharelist     = @("Gruppenablage","usershome$","images$","usersprofile$"),     # List of shares on old server
-    [Parameter(Mandatory = $false)][string]$newpath         = "E:\fileserv",                                                 # location of files on local server
-    [Parameter(Mandatory = $false)][switch]$WindowsFeatures   = $false,                                                      # Switch to install roles and features in parameter set so it does not run each time the script is executed
-    [Parameter(Mandatory = $false)][switch]$PrintService      = $false,                                                      # Switch to migrate print service
-    [Parameter(Mandatory = $false)][switch]$DHCPService       = $false,                                                      # Switch to migrate dhcp service
-    [Parameter(Mandatory = $false)][switch]$Certificate       = $false,                                                      # Switch to generate certificate request
-    [Parameter(Mandatory = $false)][string]$FQDN            = [System.Net.Dns]::GetHostByName(($env:computerName)).HostName, # Server FQDN for certificate
-    [Parameter(Mandatory = $true)][string]$Mail,                                                                             # Mail, for certificate renew or revoke
-    [Parameter(Mandatory = $true)][string]$Organization,                                                                     # Organization of the new server for certificate
-    [Parameter(Mandatory = $true)][string]$OrganizationalUnit,                                                               # Organizational unit of the new server for certificate
-    [Parameter(Mandatory = $true)][string]$City,                                                                             # City, the new server is located for certificate
-    [Parameter(Mandatory = $false)][string]$State           = "Schleswig-Holstein",                                          # State, the new server is located for certificate
-    [Parameter(Mandatory = $false)][string]$Country         = "DE",                                                          # Country, the new server is located
-    [Parameter(Mandatory = $false)][switch]$All               = $false                                                       # Switch to do all migration steps excl. install roles and features
+
+    [Parameter(Mandatory = $true, ParameterSetName='PrintService')]
+    [Parameter(Mandatory = $true, ParameterSetName='DHCPService')]
+    [Parameter(Mandatory = $true, ParameterSetName='FileService')]
+    [Parameter(Mandatory = $true, ParameterSetName='All')]
+      [string]$oldserver,                                                                       # Name of the old server
+    [Parameter(Mandatory = $false, ParameterSetName='Serverlog')]
+    [Parameter(Mandatory = $false, ParameterSetName='All')]
+      [switch]$Serverlog,                                                                       # Switch to create serverlog file in startup
+    [Parameter(Mandatory = $false, ParameterSetName='Serverlog')]
+    [Parameter(Mandatory = $false, ParameterSetName='All')]
+      [string]$serverlogheader = "$PSScriptRoot\serverlog-header.txt",                          # default is a file in script folder
+    [Parameter(Mandatory = $false, ParameterSetName='FileService')]
+      [switch]$FileService,                                                                     # Switch to copy files
+    [Parameter(Mandatory = $false, ParameterSetName='FileService')]
+    [Parameter(Mandatory = $false, ParameterSetName='All')]
+      [string[]]$sharelist = @("groupshare","usershome$","images$","usersprofile$"),            # List of shares on old server
+    [Parameter(Mandatory = $false, ParameterSetName='FileService')]
+    [Parameter(Mandatory = $false, ParameterSetName='All')]
+      [string]$newpath = "E:\fileserv",                                                         # location of files on local server
+    [Parameter(Mandatory = $false, ParameterSetName='WindowsFeatures')]
+      [switch]$WindowsFeatures,                                                                 # Switch to install roles and features in parameter set so it does not run each time the script is executed
+    [Parameter(Mandatory = $false, ParameterSetName='PrintService')]
+      [switch]$PrintService,                                                                    # Switch to migrate print service
+    [Parameter(Mandatory = $false, ParameterSetName='DHCPService')]
+      [switch]$DHCPService,                                                                     # Switch to migrate dhcp service
+    [Parameter(Mandatory = $false, ParameterSetName='Certificate')]
+      [switch]$Certificate,                                                                     # Switch to generate certificate request
+    [Parameter(Mandatory = $false, ParameterSetName='Certificate')]
+    [Parameter(Mandatory = $false, ParameterSetName='All')]
+      [string]$FQDN = [System.Net.Dns]::GetHostByName(($env:computerName)).HostName,            # Server FQDN for certificate
+    [Parameter(Mandatory = $true, ParameterSetName='Certificate')]
+    [Parameter(Mandatory = $true, ParameterSetName='All')]
+      [string]$Mail,                                                                            # Mail, for certificate renew or revoke
+    [Parameter(Mandatory = $true, ParameterSetName='Certificate')]
+    [Parameter(Mandatory = $true, ParameterSetName='All')]
+      [string]$Organization,                                                                    # Organization of the new server for certificate
+    [Parameter(Mandatory = $true, ParameterSetName='Certificate')]
+    [Parameter(Mandatory = $true, ParameterSetName='All')]
+      [string]$OrganizationalUnit,                                                              # Organizational unit of the new server for certificate
+    [Parameter(Mandatory = $true, ParameterSetName='Certificate')]
+    [Parameter(Mandatory = $true, ParameterSetName='All')]
+      [string]$City,                                                                            # City, the new server is located for certificate
+    [Parameter(Mandatory = $false, ParameterSetName='Certificate')]
+    [Parameter(Mandatory = $false, ParameterSetName='All')]
+      [string]$State = "Schleswig-Holstein",                                                    # State, the new server is located for certificate
+    [Parameter(Mandatory = $false, ParameterSetName='Certificate')]
+    [Parameter(Mandatory = $false, ParameterSetName='All')]
+      [string]$Country = "DE",                                                                  # Country, the new server is located
+    [Parameter(Mandatory = $false, ParameterSetName='All')]
+      [switch]$All = $false                                                                     # Switch to do all migration steps excl. install roles and features
   )
 
 #########################################
