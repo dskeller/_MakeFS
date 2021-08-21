@@ -49,7 +49,8 @@
     [Parameter(Mandatory = $true, ParameterSetName='Certificate')]
     [Parameter(Mandatory = $true, ParameterSetName='All')]
       [string]$Mail,                                                                            # Mail, for certificate renew or revoke
-    [Parameter(Mandatory = $true)]
+    [Parameter(Mandatory = $true, ParameterSetName='Certificate')]
+    [Parameter(Mandatory = $true, ParameterSetName='All')]
       [string]$Organization,                                                                    # Organization of the new server for certificate
     [Parameter(Mandatory = $true, ParameterSetName='Certificate')]
     [Parameter(Mandatory = $true, ParameterSetName='All')]
