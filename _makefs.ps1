@@ -149,7 +149,7 @@ if (($Serverlog.IsPresent -eq $true) -or ($All.IsPresent -eq $true))
     Write-Log -message "Starting serverlog creation and setting file permission" -level INFO
     try
     {
-      New-Item -Path "$serverlogfile" -ItemType File -Force 
+      [void]$(New-Item -Path "$serverlogfile" -ItemType File -Force )
       Out-File -InputObject $serverlogheadercontent -FilePath "$serverlogfile"
       Start-Process -FilePath "$env:windir\System32\icacls.exe" -ArgumentList "`"$serverlogfile`" /grant *S-1-5-32-545:M"
       Write-Log -message "Serverlog created" -level INFO
