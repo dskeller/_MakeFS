@@ -22,7 +22,7 @@
     [Parameter(Mandatory = $true, ParameterSetName='All')]
       [string]$oldserver,                                                                       # Name of the old server
     [Parameter(Mandatory = $false, ParameterSetName='Serverlog')]
-    [Parameter(Mandatory = $false)]
+    [Parameter(Mandatory = $false, ParameterSetName='All')]
       [switch]$Serverlog,                                                                       # Switch to create serverlog file in startup
     [Parameter(Mandatory = $false, ParameterSetName='Serverlog')]
     [Parameter(Mandatory = $false, ParameterSetName='All')]
@@ -35,9 +35,9 @@
     [Parameter(Mandatory = $false, ParameterSetName='FileService')]
     [Parameter(Mandatory = $false, ParameterSetName='All')]
       [string]$newpath = "E:\fileserv",                                                         # location of files on local server
-    [Parameter(Mandatory = $false)]
+    [Parameter(Mandatory = $false, ParameterSetName='WindowsFeatures')]
       [switch]$WindowsFeatures,                                                                 # Switch to install roles and features in parameter set so it does not run each time the script is executed
-      [Parameter(Mandatory = $false, ParameterSetName='PrintService')]
+    [Parameter(Mandatory = $false, ParameterSetName='PrintService')]
       [switch]$PrintService,                                                                    # Switch to migrate print service
     [Parameter(Mandatory = $false, ParameterSetName='DHCPService')]
       [switch]$DHCPService,                                                                     # Switch to migrate dhcp service
@@ -60,7 +60,7 @@
       [string]$City,                                                                            # City, the new server is located for certificate
     [Parameter(Mandatory = $false, ParameterSetName='Certificate')]
     [Parameter(Mandatory = $false, ParameterSetName='All')]
-      [string]$State           = "Schleswig-Holstein",                                          # State, the new server is located for certificate
+      [string]$State = "Schleswig-Holstein",                                                    # State, the new server is located for certificate
     [Parameter(Mandatory = $false, ParameterSetName='Certificate')]
     [Parameter(Mandatory = $false, ParameterSetName='All')]
       [string]$Country = "DE",                                                                  # Country, the new server is located
