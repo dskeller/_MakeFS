@@ -17,22 +17,26 @@ It is possible to re-run parts of the script to pre migrate services and files b
 
 ## Example
 Server migration of FS-01 to FS-02<br>
-Preparation (old server is needed also not used):
+Preparation:
 ```powershell
-.\Make_FS.ps1 -oldserver "FS-01" -Serverlog $true -WindowsFeatures $true
+.\Make_FS.ps1 -serverlog
 ```
-The server auto reboots after install of roles and features.<br><br>
-Second run to migrate all services to local system
+This creates the logfile for the script in the default location and the serverlog for manual changes to the server later on.<br><br>
 ```powershell
-.\Make_FS.ps1 -oldserver "FS-01" -Serverlog $true -WindowsFeatures $true
+.\Make_FS.ps1 -UninstallWindowsFeatures
 ```
+This removes SMBv1, Powershellv2 and XPS-Viewer and reboots server.<br><br>
+```powershell
+.\Make_FS.ps1 -InstallWindowsFeatures
+```
+This enables Fileserver, SyncShareService, Ressource-Manager, DHCP, Print-Server, Web-Mgmt-Console, RSAT Tools for Active Directory and Remote-Assistance and reboots server.
 <br><br><br>
-migration only of file shares and print service
+Migration of file shares
 ```powershell
-.\_MakeFS.ps1 -oldserver "FS-01" -FileService $true -PrintService $true 
+.\_MakeFS.ps1 -FileService -oldserver "FS-01"
 ```
 This migrates default shares on FS-01 to local system.<br><br><br>
 File service migration of FS-01 to local system with specified folders
 ```powershell
-.\_MakeFS.ps1 -oldserver "FS-01" -FileService $true -$sharelist GroupShare,usershome$,Share1
+.\_MakeFS.ps1 -FileService -oldserver "FS-01" -$sharelist GroupShare,usershome$,Share1
 ```

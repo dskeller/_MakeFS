@@ -13,36 +13,70 @@
   - DHCP Server Migration
   - Computer certificate request for work folder service
 #>
-[CmdletBinding()]
-  param (
-    [Parameter(Mandatory = $true)][string]$oldserver,                                                                        # Name of the old server
-    [Parameter(Mandatory = $false)][switch]$Serverlog         = $false,                                                      # Switch to create serverlog file in startup
-    [Parameter(Mandatory = $false)][string]$serverlogheader = "$PSScriptRoot\serverlog-header.txt",                          # default is a file in script folder
-    [Parameter(Mandatory = $false)][switch]$FileService       = $false,                                                      # Switch to copy files
-    [Parameter(Mandatory = $false)][string[]]$sharelist     = @("Gruppenablage","usershome$","images$","usersprofile$"),     # List of shares on old server
-    [Parameter(Mandatory = $false)][string]$newpath         = "E:\fileserv",                                                 # location of files on local server
-    [Parameter(Mandatory = $false)][switch]$WindowsFeatures   = $false,                                                      # Switch to install roles and features in parameter set so it does not run each time the script is executed
-    [Parameter(Mandatory = $false)][switch]$PrintService      = $false,                                                      # Switch to migrate print service
-    [Parameter(Mandatory = $false)][switch]$DHCPService       = $false,                                                      # Switch to migrate dhcp service
-    [Parameter(Mandatory = $false)][switch]$Certificate       = $false,                                                      # Switch to generate certificate request
-    [Parameter(Mandatory = $false)][string]$FQDN            = [System.Net.Dns]::GetHostByName(($env:computerName)).HostName, # Server FQDN for certificate
-    [Parameter(Mandatory = $true)][string]$Mail,                                                                             # Mail, for certificate renew or revoke
-    [Parameter(Mandatory = $true)][string]$Organization,                                                                     # Organization of the new server for certificate
-    [Parameter(Mandatory = $true)][string]$OrganizationalUnit,                                                               # Organizational unit of the new server for certificate
-    [Parameter(Mandatory = $true)][string]$City,                                                                             # City, the new server is located for certificate
-    [Parameter(Mandatory = $false)][string]$State           = "Schleswig-Holstein",                                          # State, the new server is located for certificate
-    [Parameter(Mandatory = $false)][string]$Country         = "DE",                                                          # Country, the new server is located
-    [Parameter(Mandatory = $false)][switch]$All               = $false                                                       # Switch to do all migration steps excl. install roles and features
-  )
+[CmdletBinding(DefaultParameterSetName='None')]
+param (
+  [Parameter(Mandatory = $true, ParameterSetName = 'PrintService')]
+  [Parameter(Mandatory = $true, ParameterSetName = 'DHCPService')]
+  [Parameter(Mandatory = $true, ParameterSetName = 'FileService')]
+  [Parameter(Mandatory = $true, ParameterSetName = 'All')]
+  [string]$oldserver, # Name of the old server
+  [Parameter(Mandatory = $false, ParameterSetName = 'Serverlog')]
+  [Parameter(Mandatory = $false, ParameterSetName = 'All')]
+  [switch]$Serverlog, # Switch to create serverlog file in startup
+  [Parameter(Mandatory = $false, ParameterSetName = 'Serverlog')]
+  [Parameter(Mandatory = $false, ParameterSetName = 'All')]
+  [string]$serverlogheader = "$PSScriptRoot\serverlog-header.txt", # default is a file in script folder
+  [Parameter(Mandatory = $false, ParameterSetName = 'FileService')]
+  [switch]$FileService, # Switch to copy files
+  [Parameter(Mandatory = $false, ParameterSetName = 'FileService')]
+  [Parameter(Mandatory = $false, ParameterSetName = 'All')]
+  [string[]]$sharelist = @("groupshare", "usershome$", "images$", "usersprofile$"), # List of shares on old server
+  [Parameter(Mandatory = $false, ParameterSetName = 'FileService')]
+  [Parameter(Mandatory = $false, ParameterSetName = 'All')]
+  [string]$newpath = "E:\fileserv", # location of files on local server
+  [Parameter(Mandatory = $false, ParameterSetName = 'InstallWindowsFeatures')]
+  [switch]$InstallWindowsFeatures, # Switch to install roles and features
+  [Parameter(Mandatory = $false, ParameterSetName = 'UninstallWindowsFeatures')]
+  [switch]$UninstallWindowsFeatures, # Switch to uninstall roles and features
+  [Parameter(Mandatory = $false, ParameterSetName = 'PrintService')]
+  [switch]$PrintService, # Switch to migrate print service
+  [Parameter(Mandatory = $false, ParameterSetName = 'DHCPService')]
+  [switch]$DHCPService, # Switch to migrate dhcp service
+  [Parameter(Mandatory = $false, ParameterSetName = 'Certificate')]
+  [switch]$Certificate, # Switch to generate certificate request
+  [Parameter(Mandatory = $false, ParameterSetName = 'Certificate')]
+  [Parameter(Mandatory = $false, ParameterSetName = 'All')]
+  [string]$FQDN = [System.Net.Dns]::GetHostByName(($env:computerName)).HostName, # Server FQDN for certificate
+  [Parameter(Mandatory = $true, ParameterSetName = 'Certificate')]
+  [Parameter(Mandatory = $true, ParameterSetName = 'All')]
+  [string]$Mail, # Mail, for certificate renew or revoke
+  [Parameter(Mandatory = $true, ParameterSetName = 'Certificate')]
+  [Parameter(Mandatory = $true, ParameterSetName = 'All')]
+  [string]$Organization, # Organization of the new server for certificate
+  [Parameter(Mandatory = $true, ParameterSetName = 'Certificate')]
+  [Parameter(Mandatory = $true, ParameterSetName = 'All')]
+  [string]$OrganizationalUnit, # Organizational unit of the new server for certificate
+  [Parameter(Mandatory = $true, ParameterSetName = 'Certificate')]
+  [Parameter(Mandatory = $true, ParameterSetName = 'All')]
+  [string]$City, # City, the new server is located for certificate
+  [Parameter(Mandatory = $false, ParameterSetName = 'Certificate')]
+  [Parameter(Mandatory = $false, ParameterSetName = 'All')]
+  [string]$State = "Schleswig-Holstein", # State, the new server is located for certificate
+  [Parameter(Mandatory = $false, ParameterSetName = 'Certificate')]
+  [Parameter(Mandatory = $false, ParameterSetName = 'All')]
+  [string]$Country = "DE", # Country, the new server is located
+  [Parameter(Mandatory = $false, ParameterSetName = 'All')]
+  [switch]$All = $false                                                                     # Switch to do all migration steps excl. install roles and features
+)
 
 #########################################
 #
 # no changes beyond this point
 #
-$logfolder              = "C:\logs\Migration"
-$LogFile                = $logfolder + "\" + $($($MyInvocation.MyCommand.Name).Replace('.ps1','.log'))
-$roboparams             = @('/COPYALL','/MIR','/MT:128','/COPY:DATSOU','/DCOPY:DAT','/DST','/R:1','/W:2','/NC','/NP','/J','/SEC','/ZB','/BYTES','/XF Sync-UserProfile.log Thumbs.db ~$* ~*.tmp','/XD Der-europass-macht-Schule')
-$serverlogfile          = $env:ProgramData + "\Microsoft\Windows\Start Menu\Programs\StartUp\serverlog.txt"
+$logfolder = "C:\logs\Migration"
+$LogFile = $logfolder + "\" + $($($MyInvocation.MyCommand.Name).Replace('.ps1', '.log'))
+$roboparams = @('/COPYALL', '/MIR', '/MT:128', '/COPY:DATSOU', '/DCOPY:DAT', '/DST', '/R:1', '/W:2', '/NC', '/NP', '/J', '/SEC', '/ZB', '/BYTES', '/XF Sync-UserProfile.log Thumbs.db ~$* ~*.tmp', '/XD Der-europass-macht-Schule')
+$serverlogfile = $env:ProgramData + "\Microsoft\Windows\Start Menu\Programs\StartUp\serverlog.txt"
 $serverlogheadercontent = Get-Content -Path $serverlogheader
 
 #region functions
@@ -108,13 +142,14 @@ Write-Log -message "Starting script execution" -level INFO
 Write-Log -message "Log files location is: $logfolder" -level INFO
 
 #region serverlog
-if (($Serverlog.IsPresent -eq $true)-or($All.IsPresent -eq $true)){
+if (($Serverlog.IsPresent -eq $true) -or ($All.IsPresent -eq $true))
+{
   if (-not (Test-Path "$serverlogfile" -PathType Leaf))
   {
     Write-Log -message "Starting serverlog creation and setting file permission" -level INFO
     try
     {
-      New-Item -Path "$serverlogfile" -ItemType File -Force 
+      [void]$(New-Item -Path "$serverlogfile" -ItemType File -Force )
       Out-File -InputObject $serverlogheadercontent -FilePath "$serverlogfile"
       Start-Process -FilePath "$env:windir\System32\icacls.exe" -ArgumentList "`"$serverlogfile`" /grant *S-1-5-32-545:M"
       Write-Log -message "Serverlog created" -level INFO
@@ -123,7 +158,9 @@ if (($Serverlog.IsPresent -eq $true)-or($All.IsPresent -eq $true)){
     {
       Write-Log -message "Unable to create $serverlogfile" -level ERROR
     }
-  }else{
+  }
+  else
+  {
     Write-Log -message "'$serverlogfile' already exists. Setting permissions to User:M" -level INFO
     Start-Process -FilePath "$env:windir\System32\icacls.exe" -ArgumentList "`"$serverlogfile`" /grant *S-1-5-32-545:M"
   }
@@ -135,18 +172,20 @@ else
 #endregion serverlog
 
 #region windowsRaF
-if ($WindowsFeatures.IsPresent -eq $true)
+if (($InstallWindowsFeatures.IsPresent -eq $true) -and ($UninstallWindowsFeatures.IsPresent -eq $true))
+{
+  Write-Log -message "Currently it is not possible to uninstall and install windows roles and features in the same run. please restart with just one parameter specified" -level ERROR
+  break
+}
+
+if ($UninstallWindowsFeatures.IsPresent -eq $true)
 {
   # remove unwanted/unsafe features
   Write-Log -message "Uninstall-WindowsFeature -name XPS-Viewer, PowerShell-v2, FS-SMB1-Client, FS-SMB1-Server, FS-SMB1 -LogPath `"$logfolder\Uninstall-WindowsFeature.log`"" -level INFO
   Uninstall-WindowsFeature -name XPS-Viewer, PowerShell-v2, FS-SMB1-Client, FS-SMB1-Server, FS-SMB1 -LogPath "$logfolder\Uninstall-WindowsFeature.log"
 
-  # install needed features and restart server afterwards
-  Write-Log -message "Install-WindowsFeature -name FS-Fileserver, FS-SyncShareService, FS-Ressource-Manager, DHCP, Print-Server, Web-Mgmt-Console, Web-Scripting-Tools, RSAT-DHCP, RSAT-FSRM-Mgmt, RSAT-Print-Services, RSAT-ADDS-Tools, RSAT-AD-PowerShell, GPMC, Remote-Assistance -LogPath `"$logfolder\Install-WindowsFeature.log`"" -level INFO
-  Install-WindowsFeature -name FS-Fileserver, FS-SyncShareService, FS-Ressource-Manager, DHCP, Print-Server, Web-Mgmt-Console, Web-Scripting-Tools, RSAT-DHCP, RSAT-FSRM-Mgmt, RSAT-Print-Services, RSAT-ADDS-Tools, RSAT-AD-PowerShell, GPMC, Remote-Assistance -LogPath "$logfolder\Install-WindowsFeature.log"
-
   # reboot system
-  Write-Log -message "Restarting server to disable/enable roles and features" -level INFO
+  Write-Log -message "Restarting server to disable roles and features" -level INFO
   # https://docs.microsoft.com/en-us/windows/win32/cimwin32prov/win32shutdowntracker-method-in-class-win32-operatingsystem
   # Timeout, Comment, ReasonCode,  Flags (6 = Forced Reboot)
   # https://docs.microsoft.com/en-us/windows/win32/shutdown/system-shutdown-reason-codes
@@ -161,12 +200,28 @@ if ($WindowsFeatures.IsPresent -eq $true)
     ReasonCode = [System.UInt32]2214723588
     Flags      = 6
   }
-  Invoke-CimMethod -Query 'SELECT * FROM Win32_OperatingSystem' -MethodName 'Win32ShutdownTracker' –Arguments $rargs
+  Invoke-CimMethod -Query 'SELECT * FROM Win32_OperatingSystem' -MethodName 'Win32ShutdownTracker' -Arguments $rargs
 }
 else
 {
-  Write-Log -message "Skipping Windows roles and features disabling / enabling" -level INFO
-  Write-Log -message "This is normal in second or following runs of script" -level INFO
+  Write-Log -message "Skipping Disabling Windows roles and features" -level INFO
+}
+
+if ($InstallWindowsFeatures.IsPresent -eq $true)
+{
+  # install needed features and restart server afterwards
+  Write-Log -message "Install-WindowsFeature -name FS-Fileserver, FS-SyncShareService, FS-Ressource-Manager, DHCP, Print-Server, Web-Mgmt-Console, Web-Scripting-Tools, RSAT-DHCP, RSAT-FSRM-Mgmt, RSAT-Print-Services, RSAT-ADDS-Tools, RSAT-AD-PowerShell, GPMC, Remote-Assistance -LogPath `"$logfolder\Install-WindowsFeature.log`"" -level INFO
+  Install-WindowsFeature -name FS-Fileserver, FS-SyncShareService, FS-Ressource-Manager, DHCP, Print-Server, Web-Mgmt-Console, Web-Scripting-Tools, RSAT-DHCP, RSAT-FSRM-Mgmt, RSAT-Print-Services, RSAT-ADDS-Tools, RSAT-AD-PowerShell, GPMC, Remote-Assistance -LogPath "$logfolder\Install-WindowsFeature.log"
+
+  # reboot system
+  Write-Log -message "Restarting server to disable roles and features" -level INFO
+  $rargs = @{
+    Timeout    = [System.UInt32]0
+    Comment    = 'This is a test'
+    ReasonCode = [System.UInt32]2214723588
+    Flags      = 6
+  }
+  Invoke-CimMethod -Query 'SELECT * FROM Win32_OperatingSystem' -MethodName 'Win32ShutdownTracker' -Arguments $rargs
 }
 #endregion windowsRaF
 
