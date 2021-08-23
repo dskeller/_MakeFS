@@ -19,54 +19,57 @@ param (
   [Parameter(Mandatory = $true, ParameterSetName = 'DHCPService')]
   [Parameter(Mandatory = $true, ParameterSetName = 'FileService')]
   [Parameter(Mandatory = $true, ParameterSetName = 'All')]
-  [string]$oldserver, # Name of the old server
+  [string]$oldserver,                                                               # Name of the old server
   [Parameter(Mandatory = $false, ParameterSetName = 'Serverlog')]
   [Parameter(Mandatory = $false, ParameterSetName = 'All')]
-  [switch]$Serverlog, # Switch to create serverlog file in startup
+  [switch]$Serverlog,                                                               # Switch to create serverlog file in startup
   [Parameter(Mandatory = $false, ParameterSetName = 'Serverlog')]
   [Parameter(Mandatory = $false, ParameterSetName = 'All')]
-  [string]$serverlogheader = "$PSScriptRoot\serverlog-header.txt", # default is a file in script folder
+  [string]$serverlogheader = "$PSScriptRoot\serverlog-header.txt",                  # default is a file in script folder
   [Parameter(Mandatory = $false, ParameterSetName = 'FileService')]
-  [switch]$FileService, # Switch to copy files
+  [switch]$FileService,                                                             # Switch to copy files
   [Parameter(Mandatory = $false, ParameterSetName = 'FileService')]
   [Parameter(Mandatory = $false, ParameterSetName = 'All')]
   [string[]]$sharelist = @("groupshare", "usershome$", "images$", "usersprofile$"), # List of shares on old server
   [Parameter(Mandatory = $false, ParameterSetName = 'FileService')]
   [Parameter(Mandatory = $false, ParameterSetName = 'All')]
-  [string]$newpath = "E:\fileserv", # location of files on local server
+  [string]$newpath = "E:\fileserv",                                                 # location of files on local server
+  [Parameter(Mandatory = $false, ParameterSetName = 'FileService')]
+  [Parameter(Mandatory = $false, ParameterSetName = 'All')]
+  [string]$share = "$false",                                                        # create share on local server, default is no.
   [Parameter(Mandatory = $false, ParameterSetName = 'InstallWindowsFeatures')]
-  [switch]$InstallWindowsFeatures, # Switch to install roles and features
+  [switch]$InstallWindowsFeatures,                                                  # Switch to install roles and features
   [Parameter(Mandatory = $false, ParameterSetName = 'UninstallWindowsFeatures')]
-  [switch]$UninstallWindowsFeatures, # Switch to uninstall roles and features
+  [switch]$UninstallWindowsFeatures,                                                # Switch to uninstall roles and features
   [Parameter(Mandatory = $false, ParameterSetName = 'PrintService')]
-  [switch]$PrintService, # Switch to migrate print service
+  [switch]$PrintService,                                                            # Switch to migrate print service
   [Parameter(Mandatory = $false, ParameterSetName = 'DHCPService')]
-  [switch]$DHCPService, # Switch to migrate dhcp service
+  [switch]$DHCPService,                                                             # Switch to migrate dhcp service
   [Parameter(Mandatory = $false, ParameterSetName = 'Certificate')]
-  [switch]$Certificate, # Switch to generate certificate request
-  [Parameter(Mandatory = $false, ParameterSetName = 'Certificate')]
-  [Parameter(Mandatory = $false, ParameterSetName = 'All')]
-  [string]$FQDN = [System.Net.Dns]::GetHostByName(($env:computerName)).HostName, # Server FQDN for certificate
-  [Parameter(Mandatory = $true, ParameterSetName = 'Certificate')]
-  [Parameter(Mandatory = $true, ParameterSetName = 'All')]
-  [string]$Mail, # Mail, for certificate renew or revoke
-  [Parameter(Mandatory = $true, ParameterSetName = 'Certificate')]
-  [Parameter(Mandatory = $true, ParameterSetName = 'All')]
-  [string]$Organization, # Organization of the new server for certificate
-  [Parameter(Mandatory = $true, ParameterSetName = 'Certificate')]
-  [Parameter(Mandatory = $true, ParameterSetName = 'All')]
-  [string]$OrganizationalUnit, # Organizational unit of the new server for certificate
-  [Parameter(Mandatory = $true, ParameterSetName = 'Certificate')]
-  [Parameter(Mandatory = $true, ParameterSetName = 'All')]
-  [string]$City, # City, the new server is located for certificate
+  [switch]$Certificate,                                                             # Switch to generate certificate request
   [Parameter(Mandatory = $false, ParameterSetName = 'Certificate')]
   [Parameter(Mandatory = $false, ParameterSetName = 'All')]
-  [string]$State = "Schleswig-Holstein", # State, the new server is located for certificate
+  [string]$FQDN = [System.Net.Dns]::GetHostByName(($env:computerName)).HostName,    # Server FQDN for certificate
+  [Parameter(Mandatory = $true, ParameterSetName = 'Certificate')]
+  [Parameter(Mandatory = $true, ParameterSetName = 'All')]
+  [string]$Mail,                                                                    # Mail, for certificate renew or revoke
+  [Parameter(Mandatory = $true, ParameterSetName = 'Certificate')]
+  [Parameter(Mandatory = $true, ParameterSetName = 'All')]
+  [string]$Organization,                                                            # Organization of the new server for certificate
+  [Parameter(Mandatory = $true, ParameterSetName = 'Certificate')]
+  [Parameter(Mandatory = $true, ParameterSetName = 'All')]
+  [string]$OrganizationalUnit,                                                      # Organizational unit of the new server for certificate
+  [Parameter(Mandatory = $true, ParameterSetName = 'Certificate')]
+  [Parameter(Mandatory = $true, ParameterSetName = 'All')]
+  [string]$City,                                                                    # City, the new server is located for certificate
   [Parameter(Mandatory = $false, ParameterSetName = 'Certificate')]
   [Parameter(Mandatory = $false, ParameterSetName = 'All')]
-  [string]$Country = "DE", # Country, the new server is located
+  [string]$State = "Schleswig-Holstein",                                            # State, the new server is located for certificate
+  [Parameter(Mandatory = $false, ParameterSetName = 'Certificate')]
   [Parameter(Mandatory = $false, ParameterSetName = 'All')]
-  [switch]$All = $false                                                                     # Switch to do all migration steps excl. install roles and features
+  [string]$Country = "DE",                                                          # Country, the new server is located
+  [Parameter(Mandatory = $false, ParameterSetName = 'All')]
+  [switch]$All                                                                      # Switch to do all migration steps excl. install roles and features
 )
 
 #########################################
@@ -75,7 +78,7 @@ param (
 #
 $logfolder = "C:\logs\Migration"
 $LogFile = $logfolder + "\" + $($($MyInvocation.MyCommand.Name).Replace('.ps1', '.log'))
-$roboparams = @('/COPYALL', '/MIR', '/MT:128', '/COPY:DATSOU', '/DCOPY:DAT', '/DST', '/R:1', '/W:2', '/NC', '/NP', '/J', '/SEC', '/ZB', '/BYTES', '/XF Sync-UserProfile.log Thumbs.db ~$* ~*.tmp', '/XD Der-europass-macht-Schule')
+$roboparams = @('/COPYALL', '/MIR', '/MT:128', '/COPY:DATSOU', '/DCOPY:DAT', '/DST', '/R:1', '/W:2', '/NC', '/NP', '/J', '/SEC', '/ZB', '/BYTES', '/XF Sync-UserProfile.log Thumbs.db ~$* ~*.tmp', '/XD Der-europass-macht-Schule Illustrationen_Burrini')
 $serverlogfile = $env:ProgramData + "\Microsoft\Windows\Start Menu\Programs\StartUp\serverlog.txt"
 $serverlogheadercontent = Get-Content -Path $serverlogheader
 
@@ -246,7 +249,7 @@ if (($FileService.IsPresent -eq $true)-or($All.IsPresent -eq $true)){
   Write-Log -message "Each share has its own log file for copied directories and files" -level INFO
   foreach ($share in $sharelist)
   {
-    # shared folder on on old server
+    # shared folder on old server
     $old = '\\'+$oldserver +'\'+ $share
 
     # check if source is available, if not stop working on it
@@ -257,14 +260,20 @@ if (($FileService.IsPresent -eq $true)-or($All.IsPresent -eq $true)){
     }
     else
     {
-      #get name for folder on local server
-      $folder = Split-Path $(Get-CimInstance -ComputerName $oldserver -ClassName win32_share -Filter "Name = '$share'" | Select-Object -Property Path -ExpandProperty Path) -Leaf
+      #get share on old server
+      $oShare      = Get-CimInstance -ComputerName $oldserver -ClassName win32_share -Filter "Name = '$share'"
+      #folder name and description
+      $folder      = Split-Path $oShare -Leaf
+      $description = $oShare.Description
 
       # new local folder with share name
       $new = $newpath + "\" + $folder
 
+      # date for log file
+      $sDate = Get-Date -Format yyyy-MM-dd_hh-mm
+
       # log file for each share
-      $rLogFile = $logfolder + "\" + $folder + ".log"
+      $rLogFile = $logfolder + "\" + $sDate + "_" + $folder + ".log"
 
       # add log file location to robocopy params
       $arguments = $roboparams + "/UNILOG+:$rLogFile"
@@ -273,10 +282,41 @@ if (($FileService.IsPresent -eq $true)-or($All.IsPresent -eq $true)){
       $message = "Starting copy '" + $old + "' -> '" + $new + "'"
       Write-Log $message -level INFO
       Write-Log -message "Logfile is: $rLogFile" -level INFO
-      Write-Log -message "Start-Process -Wait -FilePath `"$env:windir\System32\Robocopy.exe`" -ArgumentList `"$old $new $arguments`"" -level INFO
+      Write-Log -message "Start-Process -NoNewWindow -Wait -FilePath `"$env:windir\System32\Robocopy.exe`" -ArgumentList `"$old $new $arguments`"" -level INFO
       Start-Process -NoNewWindow -Wait -FilePath "$env:windir\System32\Robocopy.exe" -ArgumentList "`"$old`" `"$new`" $arguments"
       $message = "Finished copy '" + $old + "' -> '" + $new + "'"
-      Write-Log -message $message -level INFO 
+      Write-Log -message $message -level INFO
+
+      #share new folder
+      if ($share -eq $false)
+      {
+        $message = "Skipping sharing of '$new'"
+        Write-Log -message $message -level INFO
+      }
+      else
+      {
+        if (-not(Get-SmbShare -Name $share))
+        {
+          $message = "Creating share '$share' for '$new'"
+          Write-Log -message $message -level INFO
+          $message = "New-SmbShare -Name $share -Path `"$new`" -Description `"$Description`" -FolderEnumerationMode AccessBased -CachingMode None -FullAccess `"Jeder`""
+          Write-Log -message $message -level INFO
+          try
+          {
+            New-SmbShare -Name $share -Path "$new" -Description $description -FolderEnumerationMode AccessBased -CachingMode None -FullAccess "Jeder"
+          }
+          catch
+          {
+            $message = "Unable to create share. Error was $_"
+            Write-Log -message $message -level ERROR
+          }
+        }
+        else
+        {
+          $message = "Creating share '$share' for '$new' failed. share name already exists."
+          Write-Log -message $message -level ERROR
+        }
+      }
     }
   }
 }
