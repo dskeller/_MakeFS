@@ -34,6 +34,9 @@ param (
   [Parameter(Mandatory = $false, ParameterSetName = 'FileService')]
   [Parameter(Mandatory = $false, ParameterSetName = 'All')]
   [string]$newpath = "E:\fileserv",                                                 # location of files on local server
+  [Parameter(Mandatory = $false, ParameterSetName = 'FileService')]
+  [Parameter(Mandatory = $false, ParameterSetName = 'All')]
+  [switch]$share,                                                                   # create share on local server
   [Parameter(Mandatory = $false, ParameterSetName = 'InstallWindowsFeatures')]
   [switch]$InstallWindowsFeatures,                                                  # Switch to install roles and features
   [Parameter(Mandatory = $false, ParameterSetName = 'UninstallWindowsFeatures')]
@@ -246,7 +249,7 @@ if (($FileService.IsPresent -eq $true)-or($All.IsPresent -eq $true)){
   Write-Log -message "Each share has its own log file for copied directories and files" -level INFO
   foreach ($share in $sharelist)
   {
-    # shared folder on on old server
+    # shared folder on old server
     $old = '\\'+$oldserver +'\'+ $share
 
     # check if source is available, if not stop working on it
@@ -257,8 +260,11 @@ if (($FileService.IsPresent -eq $true)-or($All.IsPresent -eq $true)){
     }
     else
     {
-      #get name for folder on local server
-      $folder = Split-Path $(Get-CimInstance -ComputerName $oldserver -ClassName win32_share -Filter "Name = '$share'" | Select-Object -Property Path -ExpandProperty Path) -Leaf
+      #get share on old server
+      $oShare      = Get-CimInstance -ComputerName $oldserver -ClassName win32_share -Filter "Name = '$share'"
+      #folder name and description
+      $folder      = Split-Path $oShare -Leaf
+      $description = $oShare.Description
 
       # new local folder with share name
       $new = $newpath + "\" + $folder
@@ -279,7 +285,38 @@ if (($FileService.IsPresent -eq $true)-or($All.IsPresent -eq $true)){
       Write-Log -message "Start-Process -NoNewWindow -Wait -FilePath `"$env:windir\System32\Robocopy.exe`" -ArgumentList `"$old $new $arguments`"" -level INFO
       Start-Process -NoNewWindow -Wait -FilePath "$env:windir\System32\Robocopy.exe" -ArgumentList "`"$old`" `"$new`" $arguments"
       $message = "Finished copy '" + $old + "' -> '" + $new + "'"
-      Write-Log -message $message -level INFO 
+      Write-Log -message $message -level INFO
+
+      #share new folder
+      if ($share -eq $false)
+      {
+        $message = "Skipping sharing of '$new'"
+        Write-Log -message $message -level INFO
+      }
+      else
+      {
+        if (-not(Get-SmbShare -Name $share))
+        {
+          $message = "Creating share '$share' for '$new'"
+          Write-Log -message $message -level INFO
+          $message = "New-SmbShare -Name $share -Path `"$new`" -Description `"$Description`" -FolderEnumerationMode AccessBased -CachingMode None -FullAccess `"Jeder`""
+          Write-Log -message $message -level INFO
+          try
+          {
+            New-SmbShare -Name $share -Path "$new" -Description $description -FolderEnumerationMode AccessBased -CachingMode None -FullAccess "Jeder"
+          }
+          catch
+          {
+            $message = "Unable to create share. Error was $_"
+            Write-Log -message $message -level ERROR
+          }
+        }
+        else
+        {
+          $message = "Creating share '$share' for '$new' failed. share name already exists."
+          Write-Log -message $message -level ERROR
+        }
+      }
     }
   }
 }
