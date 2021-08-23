@@ -36,7 +36,7 @@ param (
   [string]$newpath = "E:\fileserv",                                                 # location of files on local server
   [Parameter(Mandatory = $false, ParameterSetName = 'FileService')]
   [Parameter(Mandatory = $false, ParameterSetName = 'All')]
-  [string]$share = "$false",                                                        # create share on local server, default is no.
+  [switch]$share,                                                                   # create share on local server
   [Parameter(Mandatory = $false, ParameterSetName = 'InstallWindowsFeatures')]
   [switch]$InstallWindowsFeatures,                                                  # Switch to install roles and features
   [Parameter(Mandatory = $false, ParameterSetName = 'UninstallWindowsFeatures')]
@@ -184,8 +184,8 @@ if (($InstallWindowsFeatures.IsPresent -eq $true) -and ($UninstallWindowsFeature
 if ($UninstallWindowsFeatures.IsPresent -eq $true)
 {
   # remove unwanted/unsafe features
-  Write-Log -message "Uninstall-WindowsFeature -name XPS-Viewer, PowerShell-v2, FS-SMB1-Client, FS-SMB1-Server, FS-SMB1 -LogPath `"$logfolder\Uninstall-WindowsFeature.log`"" -level INFO
-  Uninstall-WindowsFeature -name XPS-Viewer, PowerShell-v2, FS-SMB1-Client, FS-SMB1-Server, FS-SMB1 -LogPath "$logfolder\Uninstall-WindowsFeature.log"
+  Write-Log -message "Uninstall-WindowsFeature -name PowerShell-v2, FS-SMB1-Client, FS-SMB1-Server, FS-SMB1 -LogPath `"$logfolder\Uninstall-WindowsFeature.log`"" -level INFO
+  Uninstall-WindowsFeature -name PowerShell-v2, FS-SMB1-Client, FS-SMB1-Server, FS-SMB1 -LogPath "$logfolder\Uninstall-WindowsFeature.log"
 
   # reboot system
   Write-Log -message "Restarting server to disable roles and features" -level INFO
@@ -213,8 +213,8 @@ else
 if ($InstallWindowsFeatures.IsPresent -eq $true)
 {
   # install needed features and restart server afterwards
-  Write-Log -message "Install-WindowsFeature -name FS-Fileserver, FS-SyncShareService, FS-Ressource-Manager, DHCP, Print-Server, Web-Mgmt-Console, Web-Scripting-Tools, RSAT-DHCP, RSAT-FSRM-Mgmt, RSAT-Print-Services, RSAT-ADDS-Tools, RSAT-AD-PowerShell, GPMC, Remote-Assistance -LogPath `"$logfolder\Install-WindowsFeature.log`"" -level INFO
-  Install-WindowsFeature -name FS-Fileserver, FS-SyncShareService, FS-Ressource-Manager, DHCP, Print-Server, Web-Mgmt-Console, Web-Scripting-Tools, RSAT-DHCP, RSAT-FSRM-Mgmt, RSAT-Print-Services, RSAT-ADDS-Tools, RSAT-AD-PowerShell, GPMC, Remote-Assistance -LogPath "$logfolder\Install-WindowsFeature.log"
+  Write-Log -message "Install-WindowsFeature -name FS-Fileserver, FS-SyncShareService, FS-Resource-Manager, DHCP, Print-Server, Web-Mgmt-Console, Web-Scripting-Tools, RSAT-DHCP, RSAT-FSRM-Mgmt, RSAT-Print-Services, RSAT-ADDS-Tools, RSAT-AD-PowerShell, GPMC, Remote-Assistance -LogPath `"$logfolder\Install-WindowsFeature.log`"" -level INFO
+  Install-WindowsFeature -name FS-Fileserver, FS-SyncShareService, FS-Resource-Manager, DHCP, Print-Server, Web-Mgmt-Console, Web-Scripting-Tools, RSAT-DHCP, RSAT-FSRM-Mgmt, RSAT-Print-Services, RSAT-ADDS-Tools, RSAT-AD-PowerShell, GPMC, Remote-Assistance -LogPath "$logfolder\Install-WindowsFeature.log"
 
   # reboot system
   Write-Log -message "Restarting server to disable roles and features" -level INFO
