@@ -267,7 +267,7 @@ if (($FileService.IsPresent -eq $true)-or($All.IsPresent -eq $true)){
       $description = $oShare.Description
 
       # new local folder with share name
-      $new = $newpath + "\" + $folder
+      $new = $newpath.TrimEnd('\') + "\" + $folder
 
       # date for log file
       $sDate = Get-Date -Format yyyy-MM-dd_hh-mm
