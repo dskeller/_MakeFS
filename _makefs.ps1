@@ -418,6 +418,7 @@ if (($Certificate.IsPresent -eq $true)-or($All.IsPresent -eq $true))
   Exportable = TRUE                                                      ; TRUE = Private key is exportable
   KeyLength = 4096                                                       ; Valid key sizes: 1024, 2048, 4096, 8192, 16384
   KeySpec = 1                                                            ; Key Exchange – Required for encryption
+  KeyAlgorithm = ECDSA_P256                                              ; Algorithm used to generate key pair
   MachineKeySet = TRUE                                                   ; The default is false.
   PrivateKeyArchive = FALSE                                              ; The PrivateKeyArchive setting works only if the corresponding RequestType is set to "CMC"
   ProviderName = "Microsoft Enhanced RSA and AES Cryptographic Provider"
