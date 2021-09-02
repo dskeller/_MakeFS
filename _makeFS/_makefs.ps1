@@ -78,7 +78,7 @@ param (
 #
 $logfolder = "C:\logs\Migration"
 $LogFile = $logfolder + "\" + $($($MyInvocation.MyCommand.Name).Replace('.ps1', '.log'))
-$roboparams = @('/COPYALL', '/MIR', '/MT:128', '/COPY:DATSOU', '/DCOPY:DAT', '/DST', '/R:1', '/W:2', '/NC', '/NP', '/J', '/SEC', '/ZB', '/BYTES', '/XF Sync-UserProfile.log Thumbs.db ~$* ~*.tmp', '/XD Der-europass-macht-Schule Illustrationen_Burrini profile.v2')
+$roboparams = @('/COPYALL', '/MIR', '/MT:128', '/COPY:DATSOU', '/DCOPY:DAT', '/DST', '/R:1', '/W:2', '/NC', '/NP', '/J', '/SEC', '/ZB', '/BYTES', '/XF Sync-UserProfile.log Thumbs.db ~$* ~*.tmp ~*.wbk fbc*.tmp', '/XD profile.v2')
 $serverlogfile = $env:ProgramData + "\Microsoft\Windows\Start Menu\Programs\StartUp\serverlog.txt"
 $serverlogheadercontent = Get-Content -Path $serverlogheader
 
@@ -152,7 +152,7 @@ if (($Serverlog.IsPresent -eq $true) -or ($All.IsPresent -eq $true))
     Write-Log -message "Starting serverlog creation and setting file permission" -level INFO
     try
     {
-      [void]$(New-Item -Path "$serverlogfile" -ItemType File -Force )
+      [void]$(New-Item -Path "$serverlogfile" -ItemType File -Force)
       Out-File -InputObject $serverlogheadercontent -FilePath "$serverlogfile"
       Start-Process -FilePath "$env:windir\System32\icacls.exe" -ArgumentList "`"$serverlogfile`" /grant *S-1-5-32-545:M"
       Write-Log -message "Serverlog created" -level INFO
@@ -199,7 +199,7 @@ if ($UninstallWindowsFeatures.IsPresent -eq $true)
   # -> [uint32]"0x84020004"
   $rargs = @{
     Timeout    = [System.UInt32]0
-    Comment    = 'This is a test'
+    Comment    = 'Uninstall Windows roles and features'
     ReasonCode = [System.UInt32]2214723588
     Flags      = 6
   }
@@ -217,14 +217,18 @@ if ($InstallWindowsFeatures.IsPresent -eq $true)
   Install-WindowsFeature -name FS-Fileserver, FS-SyncShareService, FS-Resource-Manager, DHCP, Print-Server, Web-Mgmt-Console, Web-Scripting-Tools, RSAT-DHCP, RSAT-FSRM-Mgmt, RSAT-Print-Services, RSAT-ADDS-Tools, RSAT-AD-PowerShell, GPMC, Remote-Assistance -LogPath "$logfolder\Install-WindowsFeature.log"
 
   # reboot system
-  Write-Log -message "Restarting server to disable roles and features" -level INFO
+  Write-Log -message "Restarting server to enable roles and features" -level INFO
   $rargs = @{
     Timeout    = [System.UInt32]0
-    Comment    = 'This is a test'
+    Comment    = 'Install Windows roles and features'
     ReasonCode = [System.UInt32]2214723588
     Flags      = 6
   }
   Invoke-CimMethod -Query 'SELECT * FROM Win32_OperatingSystem' -MethodName 'Win32ShutdownTracker' -Arguments $rargs
+}
+else
+{
+  Write-Log -message "Skipping Enabling Windows roles and features" -level INFO
 }
 #endregion windowsRaF
 
