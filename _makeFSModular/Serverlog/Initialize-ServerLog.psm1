@@ -1,3 +1,7 @@
+<#
+  Initialize-Serverlog.psm1 (c) 2021 dskeller
+#>
+
 #region HelpFunction
 function Write-Log
 {
