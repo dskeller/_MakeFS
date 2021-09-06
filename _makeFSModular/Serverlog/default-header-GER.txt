@@ -5,8 +5,10 @@
 
 ##############################
 
-Insert current date/time with [F5]
-Leave your login and changes made
+Bitte jede Änderung/Aktion auf dem Server mit Datum, Kennung und Beschreibung dokumentieren.
+Bitte oben immer die letzte Aktion eintragen.
+
+Mit F5 Uhrzeit und Datum eintragen.
 
 date                    name                    action
 ______________________________________________________________________________
