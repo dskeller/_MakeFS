@@ -1,0 +1,13 @@
+##############################
+
+          Serverlog
+          ---------
+
+##############################
+
+Insert current date/time with [F5]
+Leave your login and changes made
+
+date                    name                    action
+______________________________________________________________________________
+
