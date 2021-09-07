@@ -52,6 +52,7 @@ function Initialize-ServerLog
         return $true
       })]
       [System.IO.FileInfo]$initialHeaderFile,
+      [Parameter(Mandatory=$false)]
       [System.IO.FileInfo]$logFolder="C:\logs"
   )
   
