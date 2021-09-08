@@ -1,0 +1,6 @@
+<config>
+<raf>PowerShell-v2</raf>
+<raf>FS-SMB1-Client</raf>
+<raf>FS-SMB1-Server</raf>
+<raf>FS-SMB1</raf>
+</config>
