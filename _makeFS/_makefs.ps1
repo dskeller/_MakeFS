@@ -267,7 +267,7 @@ if (($FileService.IsPresent -eq $true)-or($All.IsPresent -eq $true)){
       #get share on old server
       $oShare      = Get-CimInstance -ComputerName $oldserver -ClassName win32_share -Filter "Name = '$share'"
       #folder name and description
-      $folder      = Split-Path $oShare -Leaf
+      $folder      = Split-Path $($oShare.Path) -Leaf
       $description = $oShare.Description
 
       # new local folder with share name
