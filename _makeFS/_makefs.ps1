@@ -36,7 +36,7 @@ param (
   [string]$newpath = "E:\fileserv",                                                 # location of files on local server
   [Parameter(Mandatory = $false, ParameterSetName = 'FileService')]
   [Parameter(Mandatory = $false, ParameterSetName = 'All')]
-  [switch]$share,                                                                   # create share on local server
+  [switch]$createshare,                                                             # create share on local server
   [Parameter(Mandatory = $false, ParameterSetName = 'InstallWindowsFeatures')]
   [switch]$InstallWindowsFeatures,                                                  # Switch to install roles and features
   [Parameter(Mandatory = $false, ParameterSetName = 'UninstallWindowsFeatures')]
@@ -292,7 +292,7 @@ if (($FileService.IsPresent -eq $true)-or($All.IsPresent -eq $true)){
       Write-Log -message $message -level INFO
 
       #share new folder
-      if ($share -eq $false)
+      if ($createshare -eq $false)
       {
         $message = "Skipping sharing of '$new'"
         Write-Log -message $message -level INFO
