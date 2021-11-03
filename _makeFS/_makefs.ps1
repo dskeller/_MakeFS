@@ -185,7 +185,8 @@ if ($UninstallWindowsFeatures.IsPresent -eq $true)
 {
   # remove unwanted/unsafe features
   Write-Log -message "Uninstall-WindowsFeature -name PowerShell-v2, FS-SMB1-Client, FS-SMB1-Server, FS-SMB1 -LogPath `"$logfolder\Uninstall-WindowsFeature.log`"" -level INFO
-  Uninstall-WindowsFeature -name PowerShell-v2, FS-SMB1-Client, FS-SMB1-Server, FS-SMB1 -LogPath "$logfolder\Uninstall-WindowsFeature.log"
+  $uninstJob = start-Job -Command {Uninstall-WindowsFeature -name PowerShell-v2, FS-SMB1-Client, FS-SMB1-Server, FS-SMB1 -LogPath "$logfolder\Uninstall-WindowsFeature.log"}
+  Receive-Job -Job $uninstJob -Wait | select-Object Success, RestartNeeded, exitCode, FeatureResult
 
   # reboot system
   Write-Log -message "Restarting server to disable roles and features" -level INFO
@@ -214,7 +215,8 @@ if ($InstallWindowsFeatures.IsPresent -eq $true)
 {
   # install needed features and restart server afterwards
   Write-Log -message "Install-WindowsFeature -name FS-Fileserver, FS-SyncShareService, FS-Resource-Manager, DHCP, Print-Server, Web-Mgmt-Console, Web-Scripting-Tools, RSAT-DHCP, RSAT-FSRM-Mgmt, RSAT-Print-Services, RSAT-ADDS-Tools, RSAT-AD-PowerShell, GPMC, Remote-Assistance -LogPath `"$logfolder\Install-WindowsFeature.log`"" -level INFO
-  Install-WindowsFeature -name FS-Fileserver, FS-SyncShareService, FS-Resource-Manager, DHCP, Print-Server, Web-Mgmt-Console, Web-Scripting-Tools, RSAT-DHCP, RSAT-FSRM-Mgmt, RSAT-Print-Services, RSAT-ADDS-Tools, RSAT-AD-PowerShell, GPMC, Remote-Assistance -LogPath "$logfolder\Install-WindowsFeature.log"
+  $instJob = start-Job -Command {Install-WindowsFeature -name FS-Fileserver, FS-SyncShareService, FS-Resource-Manager, DHCP, Print-Server, Web-Mgmt-Console, Web-Scripting-Tools, RSAT-DHCP, RSAT-FSRM-Mgmt, RSAT-Print-Services, RSAT-ADDS-Tools, RSAT-AD-PowerShell, GPMC, Remote-Assistance -LogPath "$logfolder\Install-WindowsFeature.log"}
+  Receive-Job -Job $instJob -Wait | select-Object Success, RestartNeeded, exitCode, FeatureResult
 
   # reboot system
   Write-Log -message "Restarting server to enable roles and features" -level INFO
