@@ -1,7 +1,7 @@
 #Requires -runasadministrator
 <#
   _makefs.ps1
-  
+
   create standardized file-server with
   - Fileservice
   - SyncShareService
@@ -13,61 +13,61 @@
   - DHCP Server Migration
   - Computer certificate request for work folder service
 #>
-[CmdletBinding(DefaultParameterSetName='None')]
+[CmdletBinding(DefaultParameterSetName = 'None')]
 param (
   [Parameter(Mandatory = $true, ParameterSetName = 'PrintService')]
   [Parameter(Mandatory = $true, ParameterSetName = 'DHCPService')]
   [Parameter(Mandatory = $true, ParameterSetName = 'FileService')]
   [Parameter(Mandatory = $true, ParameterSetName = 'All')]
-  [string]$oldserver,                                                               # Name of the old server
+  [string]$oldserver, # Name of the old server
   [Parameter(Mandatory = $false, ParameterSetName = 'Serverlog')]
   [Parameter(Mandatory = $false, ParameterSetName = 'All')]
-  [switch]$Serverlog,                                                               # Switch to create serverlog file in startup
+  [switch]$Serverlog, # Switch to create serverlog file in startup
   [Parameter(Mandatory = $false, ParameterSetName = 'Serverlog')]
   [Parameter(Mandatory = $false, ParameterSetName = 'All')]
-  [string]$serverlogheader = "$PSScriptRoot\serverlog-header.txt",                  # default is a file in script folder
+  [string]$serverlogheader = "$PSScriptRoot\serverlog-header.txt", # default is a file in script folder
   [Parameter(Mandatory = $false, ParameterSetName = 'FileService')]
-  [switch]$FileService,                                                             # Switch to copy files
+  [switch]$FileService, # Switch to copy files
   [Parameter(Mandatory = $false, ParameterSetName = 'FileService')]
   [Parameter(Mandatory = $false, ParameterSetName = 'All')]
   [string[]]$sharelist = @("groupshare", "usershome$", "images$", "usersprofile$"), # List of shares on old server
   [Parameter(Mandatory = $false, ParameterSetName = 'FileService')]
   [Parameter(Mandatory = $false, ParameterSetName = 'All')]
-  [string]$newpath = "E:\fileserv",                                                 # location of files on local server
+  [string]$newpath = "E:\fileserv", # location of files on local server
   [Parameter(Mandatory = $false, ParameterSetName = 'FileService')]
   [Parameter(Mandatory = $false, ParameterSetName = 'All')]
-  [switch]$createshare,                                                             # create share on local server
+  [switch]$createshare, # create share on local server
   [Parameter(Mandatory = $false, ParameterSetName = 'InstallWindowsFeatures')]
-  [switch]$InstallWindowsFeatures,                                                  # Switch to install roles and features
+  [switch]$InstallWindowsFeatures, # Switch to install roles and features
   [Parameter(Mandatory = $false, ParameterSetName = 'UninstallWindowsFeatures')]
-  [switch]$UninstallWindowsFeatures,                                                # Switch to uninstall roles and features
+  [switch]$UninstallWindowsFeatures, # Switch to uninstall roles and features
   [Parameter(Mandatory = $false, ParameterSetName = 'PrintService')]
-  [switch]$PrintService,                                                            # Switch to migrate print service
+  [switch]$PrintService, # Switch to migrate print service
   [Parameter(Mandatory = $false, ParameterSetName = 'DHCPService')]
-  [switch]$DHCPService,                                                             # Switch to migrate dhcp service
+  [switch]$DHCPService, # Switch to migrate dhcp service
   [Parameter(Mandatory = $false, ParameterSetName = 'Certificate')]
-  [switch]$Certificate,                                                             # Switch to generate certificate request
-  [Parameter(Mandatory = $false, ParameterSetName = 'Certificate')]
-  [Parameter(Mandatory = $false, ParameterSetName = 'All')]
-  [string]$FQDN = [System.Net.Dns]::GetHostByName(($env:computerName)).HostName,    # Server FQDN for certificate
-  [Parameter(Mandatory = $true, ParameterSetName = 'Certificate')]
-  [Parameter(Mandatory = $true, ParameterSetName = 'All')]
-  [string]$Mail,                                                                    # Mail, for certificate renew or revoke
-  [Parameter(Mandatory = $true, ParameterSetName = 'Certificate')]
-  [Parameter(Mandatory = $true, ParameterSetName = 'All')]
-  [string]$Organization,                                                            # Organization of the new server for certificate
-  [Parameter(Mandatory = $true, ParameterSetName = 'Certificate')]
-  [Parameter(Mandatory = $true, ParameterSetName = 'All')]
-  [string]$OrganizationalUnit,                                                      # Organizational unit of the new server for certificate
-  [Parameter(Mandatory = $true, ParameterSetName = 'Certificate')]
-  [Parameter(Mandatory = $true, ParameterSetName = 'All')]
-  [string]$City,                                                                    # City, the new server is located for certificate
+  [switch]$Certificate, # Switch to generate certificate request
   [Parameter(Mandatory = $false, ParameterSetName = 'Certificate')]
   [Parameter(Mandatory = $false, ParameterSetName = 'All')]
-  [string]$State = "Schleswig-Holstein",                                            # State, the new server is located for certificate
+  [string]$FQDN = [System.Net.Dns]::GetHostByName(($env:computerName)).HostName, # Server FQDN for certificate
+  [Parameter(Mandatory = $true, ParameterSetName = 'Certificate')]
+  [Parameter(Mandatory = $true, ParameterSetName = 'All')]
+  [string]$Mail, # Mail, for certificate renew or revoke
+  [Parameter(Mandatory = $true, ParameterSetName = 'Certificate')]
+  [Parameter(Mandatory = $true, ParameterSetName = 'All')]
+  [string]$Organization, # Organization of the new server for certificate
+  [Parameter(Mandatory = $true, ParameterSetName = 'Certificate')]
+  [Parameter(Mandatory = $true, ParameterSetName = 'All')]
+  [string]$OrganizationalUnit, # Organizational unit of the new server for certificate
+  [Parameter(Mandatory = $true, ParameterSetName = 'Certificate')]
+  [Parameter(Mandatory = $true, ParameterSetName = 'All')]
+  [string]$City, # City, the new server is located for certificate
   [Parameter(Mandatory = $false, ParameterSetName = 'Certificate')]
   [Parameter(Mandatory = $false, ParameterSetName = 'All')]
-  [string]$Country = "DE",                                                          # Country, the new server is located
+  [string]$State = "Schleswig-Holstein", # State, the new server is located for certificate
+  [Parameter(Mandatory = $false, ParameterSetName = 'Certificate')]
+  [Parameter(Mandatory = $false, ParameterSetName = 'All')]
+  [string]$Country = "DE", # Country, the new server is located
   [Parameter(Mandatory = $false, ParameterSetName = 'All')]
   [switch]$All                                                                      # Switch to do all migration steps excl. install roles and features
 )
@@ -83,8 +83,7 @@ $serverlogfile = $env:ProgramData + "\Microsoft\Windows\Start Menu\Programs\Star
 $serverlogheadercontent = Get-Content -Path $serverlogheader
 
 #region functions
-function Write-Log
-{
+function Write-Log {
   [CmdletBinding()]
   param (
     [Parameter(Mandatory = $true)]
@@ -97,20 +96,16 @@ function Write-Log
     [string]
     $Log = $LogFile
   )
-  if ($level -eq 'INFO')
-  {
+  if ($level -eq 'INFO') {
     [System.ConsoleColor]$color = 'Green'
   }
-  elseif ($level -eq 'WARN')
-  {
+  elseif ($level -eq 'WARN') {
     [System.ConsoleColor]$color = 'Yellow'
   }
-  elseif ($level -eq 'ERROR')
-  {
+  elseif ($level -eq 'ERROR') {
     [System.ConsoleColor]$color = 'Red'
   }
-  else
-  {
+  else {
     [System.ConsoleColor]$color = 'White'
   }
   $date = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
@@ -126,14 +121,11 @@ function Write-Log
 Clear-Host
 
 # create log folder
-if (-not (Test-Path "$logfolder"))
-{
-  try
-  {
+if (-not (Test-Path "$logfolder")) {
+  try {
     New-Item -Path "$logfolder" -ItemType Directory -Force
   }
-  catch
-  {
+  catch {
     Write-Host "ERROR: Unable to create Log and Temp Folder $logfolder"
     Pause
     exit 1
@@ -145,48 +137,40 @@ Write-Log -message "Starting script execution" -level INFO
 Write-Log -message "Log files location is: $logfolder" -level INFO
 
 #region serverlog
-if (($Serverlog.IsPresent -eq $true) -or ($All.IsPresent -eq $true))
-{
-  if (-not (Test-Path "$serverlogfile" -PathType Leaf))
-  {
+if (($Serverlog.IsPresent -eq $true) -or ($All.IsPresent -eq $true)) {
+  if (-not (Test-Path "$serverlogfile" -PathType Leaf)) {
     Write-Log -message "Starting serverlog creation and setting file permission" -level INFO
-    try
-    {
+    try {
       [void]$(New-Item -Path "$serverlogfile" -ItemType File -Force)
       Out-File -InputObject $serverlogheadercontent -FilePath "$serverlogfile"
       Start-Process -FilePath "$env:windir\System32\icacls.exe" -ArgumentList "`"$serverlogfile`" /grant *S-1-5-32-545:M"
       Write-Log -message "Serverlog created" -level INFO
     }
-    catch
-    {
+    catch {
       Write-Log -message "Unable to create $serverlogfile" -level ERROR
     }
   }
-  else
-  {
+  else {
     Write-Log -message "'$serverlogfile' already exists. Setting permissions to User:M" -level INFO
     Start-Process -FilePath "$env:windir\System32\icacls.exe" -ArgumentList "`"$serverlogfile`" /grant *S-1-5-32-545:M"
   }
 }
-else
-{
+else {
   Write-Log -message "Skipping Serverlog creation" -level INFO
 }
 #endregion serverlog
 
 #region windowsRaF
-if (($InstallWindowsFeatures.IsPresent -eq $true) -and ($UninstallWindowsFeatures.IsPresent -eq $true))
-{
+if (($InstallWindowsFeatures.IsPresent -eq $true) -and ($UninstallWindowsFeatures.IsPresent -eq $true)) {
   Write-Log -message "Currently it is not possible to uninstall and install windows roles and features in the same run. please restart with just one parameter specified" -level ERROR
   break
 }
 
-if ($UninstallWindowsFeatures.IsPresent -eq $true)
-{
+if ($UninstallWindowsFeatures.IsPresent -eq $true) {
   # remove unwanted/unsafe features
   Write-Log -message "Uninstall-WindowsFeature -name PowerShell-v2, FS-SMB1-Client, FS-SMB1-Server, FS-SMB1 -LogPath `"$logfolder\Uninstall-WindowsFeature.log`"" -level INFO
-  $uninstJob = start-Job -Command {Uninstall-WindowsFeature -name PowerShell-v2, FS-SMB1-Client, FS-SMB1-Server, FS-SMB1 -LogPath "$logfolder\Uninstall-WindowsFeature.log"}
-  Receive-Job -Job $uninstJob -Wait | select-Object Success, RestartNeeded, exitCode, FeatureResult
+  $uninstJob = Start-Job -Command { Uninstall-WindowsFeature -Name PowerShell-v2, FS-SMB1-Client, FS-SMB1-Server, FS-SMB1 -LogPath "$logfolder\Uninstall-WindowsFeature.log" }
+  Receive-Job -Job $uninstJob -Wait | Select-Object Success, RestartNeeded, exitCode, FeatureResult
 
   # reboot system
   Write-Log -message "Restarting server to disable roles and features" -level INFO
@@ -206,17 +190,15 @@ if ($UninstallWindowsFeatures.IsPresent -eq $true)
   }
   Invoke-CimMethod -Query 'SELECT * FROM Win32_OperatingSystem' -MethodName 'Win32ShutdownTracker' -Arguments $rargs
 }
-else
-{
+else {
   Write-Log -message "Skipping Disabling Windows roles and features" -level INFO
 }
 
-if ($InstallWindowsFeatures.IsPresent -eq $true)
-{
+if ($InstallWindowsFeatures.IsPresent -eq $true) {
   # install needed features and restart server afterwards
   Write-Log -message "Install-WindowsFeature -name FS-Fileserver, FS-SyncShareService, FS-Resource-Manager, DHCP, Print-Server, Web-Mgmt-Console, Web-Scripting-Tools, RSAT-DHCP, RSAT-FSRM-Mgmt, RSAT-Print-Services, RSAT-ADDS-Tools, RSAT-AD-PowerShell, GPMC, Remote-Assistance -LogPath `"$logfolder\Install-WindowsFeature.log`"" -level INFO
-  $instJob = start-Job -Command {Install-WindowsFeature -name FS-Fileserver, FS-SyncShareService, FS-Resource-Manager, DHCP, Print-Server, Web-Mgmt-Console, Web-Scripting-Tools, RSAT-DHCP, RSAT-FSRM-Mgmt, RSAT-Print-Services, RSAT-ADDS-Tools, RSAT-AD-PowerShell, GPMC, Remote-Assistance -LogPath "$logfolder\Install-WindowsFeature.log"}
-  Receive-Job -Job $instJob -Wait | select-Object Success, RestartNeeded, exitCode, FeatureResult
+  $instJob = Start-Job -Command { Install-WindowsFeature -Name FS-Fileserver, FS-SyncShareService, FS-Resource-Manager, DHCP, Print-Server, Web-Mgmt-Console, Web-Scripting-Tools, RSAT-DHCP, RSAT-FSRM-Mgmt, RSAT-Print-Services, RSAT-ADDS-Tools, RSAT-AD-PowerShell, GPMC, Remote-Assistance -LogPath "$logfolder\Install-WindowsFeature.log" }
+  Receive-Job -Job $instJob -Wait | Select-Object Success, RestartNeeded, exitCode, FeatureResult
 
   # reboot system
   Write-Log -message "Restarting server to enable roles and features" -level INFO
@@ -228,49 +210,48 @@ if ($InstallWindowsFeatures.IsPresent -eq $true)
   }
   Invoke-CimMethod -Query 'SELECT * FROM Win32_OperatingSystem' -MethodName 'Win32ShutdownTracker' -Arguments $rargs
 }
-else
-{
+else {
   Write-Log -message "Skipping Enabling Windows roles and features" -level INFO
 }
 #endregion windowsRaF
 
 #region fileservice
-if (($FileService.IsPresent -eq $true)-or($All.IsPresent -eq $true)){
+if (($FileService.IsPresent -eq $true) -or ($All.IsPresent -eq $true)) {
   # copy folder structure with permissions
   Write-Log -message "Starting copy process of '$oldserver' to '$newpath'" -level INFO
-  if (-not(Test-Path $newpath))
-  {
+  if (-not(Test-Path $newpath)) {
     Write-Log -message "New-Item -Path '$newpath' -ItemType Directory -Force" -level INFO
-    try
-    {
+    try {
       New-Item -Path "$newpath" -ItemType Directory -Force
     }
-    catch
-    {
+    catch {
       Write-Log "Unable to create path" -level ERROR
       exit 1
     }
   }
 
   Write-Log -message "Each share has its own log file for copied directories and files" -level INFO
-  foreach ($share in $sharelist)
-  {
+  foreach ($share in $sharelist) {
     # shared folder on old server
-    $old = '\\'+$oldserver +'\'+ $share
+    $old = '\\' + $oldserver + '\' + $share
 
     # check if source is available, if not stop working on it
-    if (-not(Test-Path -Path $old -PathType Container))
-    {
+    if (-not(Test-Path -Path $old -PathType Container)) {
       $message = "Unable to access '" + $old + "'"
       Write-Log $message -level ERROR
     }
-    else
-    {
+    else {
       #get share on old server
-      $oShare      = Get-CimInstance -ComputerName $oldserver -ClassName win32_share -Filter "Name = '$share'"
+      $oShare = Get-CimInstance -ComputerName $oldserver -ClassName win32_share -Filter "Name = '$share'"
       #folder name and description
-      $folder      = Split-Path $($oShare.Path) -Leaf
+      $folder = Split-Path $($oShare.Path) -Leaf
       $description = $oShare.Description
+
+      #if complete disks (administrative Shares [LW]$) are copied
+      if ($folder -match '([A-Z]|[a-z])\:\\' ) {
+        $folder = $folder.TrimEnd(':\')
+        $createshare = $false
+      }
 
       # new local folder with share name
       $new = $newpath.TrimEnd('\') + "\" + $folder
@@ -279,7 +260,12 @@ if (($FileService.IsPresent -eq $true)-or($All.IsPresent -eq $true)){
       $sDate = Get-Date -Format yyyy-MM-dd_hh-mm
 
       # log file for each share
-      $rLogFile = $logfolder + "\" + $sDate + "_" + $folder + ".log"
+      if ($folder.Length -eq 1) {
+        $rLogFile = $logfolder + "\" + $sDate + "_disk_" + $folder + ".log"
+      }
+      else {
+        $rLogFile = $logfolder + "\" + $sDate + "_" + $folder + ".log"
+      }
 
       # add log file location to robocopy params
       $arguments = $roboparams + "/UNILOG+:$rLogFile"
@@ -294,31 +280,25 @@ if (($FileService.IsPresent -eq $true)-or($All.IsPresent -eq $true)){
       Write-Log -message $message -level INFO
 
       #share new folder
-      if ($createshare -eq $false)
-      {
+      if ($createshare -eq $false) {
         $message = "Skipping sharing of '$new'"
         Write-Log -message $message -level INFO
       }
-      else
-      {
-        if (-not(Get-SmbShare -Name $share))
-        {
+      else {
+        if (-not(Get-SmbShare -Name $share)) {
           $message = "Creating share '$share' for '$new'"
           Write-Log -message $message -level INFO
           $message = "New-SmbShare -Name $share -Path `"$new`" -Description `"$Description`" -FolderEnumerationMode AccessBased -CachingMode None -FullAccess `"Jeder`""
           Write-Log -message $message -level INFO
-          try
-          {
+          try {
             New-SmbShare -Name $share -Path "$new" -Description $description -FolderEnumerationMode AccessBased -CachingMode None -FullAccess "Jeder"
           }
-          catch
-          {
+          catch {
             $message = "Unable to create share. Error was $_"
             Write-Log -message $message -level ERROR
           }
         }
-        else
-        {
+        else {
           $message = "Creating share '$share' for '$new' failed. share name already exists."
           Write-Log -message $message -level ERROR
         }
@@ -326,100 +306,86 @@ if (($FileService.IsPresent -eq $true)-or($All.IsPresent -eq $true)){
     }
   }
 }
-else
-{
+else {
   Write-Log -message "Skipping File service migration" -level INFO
 }
 #endregion fileservice
 
 #region printservice
-if (($PrintService.IsPresent -eq $true) -or ($All.IsPresent -eq $true)){
+if (($PrintService.IsPresent -eq $true) -or ($All.IsPresent -eq $true)) {
   # print server migration
 
   # tool is part of server role, so check if tool is available is necessary before run
   $tool = "C:\windows\system32\spool\tools\PrintBrm.exe"
-  if (-not (Test-Path -Path $tool -PathType Leaf))
-  {
+  if (-not (Test-Path -Path $tool -PathType Leaf)) {
     Write-Log -message "PrintBrm.exe not found. No print server migration" -level WARN
   }
-  else
-  {
-    $printshare = '\\'+$oldserver+'\print$'
-    if (-not (Test-Path -Path $printshare -PathType Container))
-    {
+  else {
+    $printshare = '\\' + $oldserver + '\print$'
+    if (-not (Test-Path -Path $printshare -PathType Container)) {
       Write-Log "`$print share on old server not reachable" -level ERROR
     }
-    else
-    {
+    else {
       $cpath = Get-Location
       Set-Location -Path $(Split-Path -Path $tool -Parent)
-      $printbrmbackup = $logfolder+'\'+$oldserver+".printerExport"
+      $printbrmbackup = $logfolder + '\' + $oldserver + ".printerExport"
       Write-Log -message "Starting print server migration" -level INFO
-      if (Test-Path -Path $printbrmbackup -PathType Leaf)
-      {
+      if (Test-Path -Path $printbrmbackup -PathType Leaf) {
         Write-Log -message "Removing existing"
-        Remove-item -Path $printbrmbackup -Force
+        Remove-Item -Path $printbrmbackup -Force
       }
       $export = & .\$(Split-Path -Path $tool -Leaf) -S "$oldserver" -B -F "$printbrmbackup" -O FORCE
-      $exportfile = $logfolder+'\printbrm-export.log'
+      $exportfile = $logfolder + '\printbrm-export.log'
       Out-File -FilePath $exportfile -InputObject $export -Encoding utf8
       $import = & .\$(Split-Path -Path $tool -Leaf) -R -F "$printbrmbackup" -O FORCE
-      $importfile = $logfolder+'\printbrm-import.log'
+      $importfile = $logfolder + '\printbrm-import.log'
       Out-File -FilePath $importfile -InputObject $import -Encoding utf8
       Set-Location $cpath.path
     }
   }
 }
-else
-{
+else {
   Write-Log -message "Skipping print service migration" -level INFO
 }
 #endregion printservice
 
 #region DHCP
-if (($DHCPService.IsPresent -eq $true) -or($All.IsPresent -eq $true))
-{
-  $dhcpbackup = $logfolder+'\'+$oldserver+"_DHCP.xml"
+if (($DHCPService.IsPresent -eq $true) -or ($All.IsPresent -eq $true)) {
+  $dhcpbackup = $logfolder + '\' + $oldserver + "_DHCP.xml"
   Write-Log -message "Starting migrating DHCP configuration" -level INFO
-  try
-  {
+  try {
     Export-DhcpServer -ComputerName $oldserver -File $dhcpbackup -Force
-    try
-    {
+    try {
       Import-DhcpServer -File $dhcpbackup -BackupPath $env:TEMP
     }
-    catch
-    {
+    catch {
       Write-Log -message "Import of DHCP configuration failed"
     }
   }
-  catch
-  {
+  catch {
     Write-Log -message "Export of DHCP configuration failed"
   }
   Write-Log -message "End migrating DHCP configuration" -level INFO
 }
-else
-{
+else {
   Write-Log -message "Skipping DHCP service migration" -level INFO
 }
 #endregion DHCP
 
 #region certificate
-if (($Certificate.IsPresent -eq $true)-or($All.IsPresent -eq $true))
-{
+if (($Certificate.IsPresent -eq $true) -or ($All.IsPresent -eq $true)) {
   # generate INF for request with specified variables
   Write-Log -message "Generating certificate request" -level INFO
-  $INFFile = $logfolder+'\'+$FQDN+'_'+$((Get-Date).ToString('yyyyMMdd'))+'.INF'
-  $REQFile = $logfolder+'\'+$FQDN+'_'+$((Get-Date).ToString('yyyyMMdd'))+'_CSR.REQ'
-  
+  $INFFile = $logfolder + '\' + $FQDN + '_' + $((Get-Date).ToString('yyyyMMdd')) + '.INF'
+  $REQFile = $logfolder + '\' + $FQDN + '_' + $((Get-Date).ToString('yyyyMMdd')) + '_CSR.REQ'
+
   $Signature = '$Windows NT$'
   $SANList = @("dns=$CertName")
 
   $INF = @"
   [Version]
-  Signature= "$Signature" 
-   
+  Signature= "$Signature"
+
   [NewRequest]
   Exportable = TRUE                                                      ; TRUE = Private key is exportable
   KeyLength = 4096                                                       ; Valid key sizes: 1024, 2048, 4096, 8192, 16384
@@ -434,7 +400,7 @@ if (($Certificate.IsPresent -eq $true)-or($All.IsPresent -eq $true))
   Subject = "E=$Mail, CN=$FQDN, OU=$OrganizationalUnit, O=$Organization, L=$City, S=$State, C=$Country"
   UseExistingKeySet = FALSE
   UserProtected = FALSE
-   
+
   [Extensions]
   ; If your client operating system is Windows Server 2008, Windows Server 2008 R2, Windows Vista, or Windows 7
   ; SANs can be included in the Extensions section by using the following text format. Note 2.5.29.17 is the OID for a SAN extension.
@@ -449,8 +415,7 @@ if (($Certificate.IsPresent -eq $true)-or($All.IsPresent -eq $true))
 
   Write-Log -message "Certificate Request has been generated" -level INFO
 }
-else
-{
+else {
   Write-Log -message "Skipping certificate generation" -level INFO
 }
 #endregion certificate
