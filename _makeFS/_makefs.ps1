@@ -387,19 +387,18 @@ if (($Certificate.IsPresent -eq $true) -or ($All.IsPresent -eq $true)) {
   Signature= "$Signature"
 
   [NewRequest]
-  Exportable = TRUE                                                      ; TRUE = Private key is exportable
-  KeyLength = 4096                                                       ; Valid key sizes: 1024, 2048, 4096, 8192, 16384
-  KeySpec = 1                                                            ; Key Exchange – Required for encryption
-  KeyAlgorithm = ECDSA_P256                                              ; Algorithm used to generate key pair
-  MachineKeySet = TRUE                                                   ; The default is false.
-  PrivateKeyArchive = FALSE                                              ; The PrivateKeyArchive setting works only if the corresponding RequestType is set to "CMC"
-  ProviderName = "Microsoft Enhanced RSA and AES Cryptographic Provider"
-  ProviderType = 24                                                      ; PROV_RSA_AES
-  RequestType = PKCS10                                                   ; Determines the standard that is used to generate and send the certificate request (PKCS10 -- 1)
-  SMIME = False                                                          ; Refer to symmetric encryption algorithms that may be used by Secure Multipurpose Internet Mail Extensions (S/MIME)
-  Subject = "E=$Mail, CN=$FQDN, OU=$OrganizationalUnit, O=$Organization, L=$City, S=$State, C=$Country"
+  Exportierbar = TRUE ; TRUE = Privater Schlüssel ist exportierbar
+ KeyLength = 256 ; Gültige Schlüsselgrößen: 256.384.512
+ KeySpec = 1 ; Schlüsselaustausch – Für die Verschlüsselung erforderlich
+ MachineKeySet = TRUE ; Der Standardwert ist false.
+ PrivateKeyArchive = FALSE ; Die Einstellung PrivateKeyArchive funktioniert nur, wenn der entsprechende RequestType auf "CMC" gesetzt ist.
+  ProviderName = "Microsoft Software Key Storage Provider"
+  ProviderType = 23                                                      ; nistP256
+ RequestType = PKCS10 ; Bestimmt den Standard, der zum Generieren und Senden der Zertifikatanforderung verwendet wird (PKCS10 – 1)
+ SMIME = False ; Siehe symmetrische Verschlüsselungsalgorithmen, die von Secure Multipurpose Internet Mail Extensions (S/MIME) verwendet werden können.
+ Betreff = "E=$Mail, CN=$FQDN, OU=$OrganizationalUnit, O=$Organization, L=$City, S=$State, C=$Country"
   UseExistingKeySet = FALSE
-  UserProtected = FALSE
+ UserProtected = FALSCH
 
   [Extensions]
   ; If your client operating system is Windows Server 2008, Windows Server 2008 R2, Windows Vista, or Windows 7
