@@ -387,18 +387,18 @@ if (($Certificate.IsPresent -eq $true) -or ($All.IsPresent -eq $true)) {
   Signature= "$Signature"
 
   [NewRequest]
-  Exportierbar = TRUE ; TRUE = Privater Schlüssel ist exportierbar
- KeyLength = 256 ; Gültige Schlüsselgrößen: 256.384.512
- KeySpec = 1 ; Schlüsselaustausch – Für die Verschlüsselung erforderlich
- MachineKeySet = TRUE ; Der Standardwert ist false.
- PrivateKeyArchive = FALSE ; Die Einstellung PrivateKeyArchive funktioniert nur, wenn der entsprechende RequestType auf "CMC" gesetzt ist.
+  Exportable = TRUE ; TRUE = Privater Schlüssel ist exportierbar
+  KeyLength = 256 ; Gültige Schlüsselgrößen: 256.384.512
+  KeySpec = 1 ; Schlüsselaustausch – Für die Verschlüsselung erforderlich
+  MachineKeySet = TRUE ; Der Standardwert ist false.
+  PrivateKeyArchive = FALSE ; Die Einstellung PrivateKeyArchive funktioniert nur, wenn der entsprechende RequestType auf "CMC" gesetzt ist.
   ProviderName = "Microsoft Software Key Storage Provider"
   ProviderType = 23                                                      ; nistP256
- RequestType = PKCS10 ; Bestimmt den Standard, der zum Generieren und Senden der Zertifikatanforderung verwendet wird (PKCS10 – 1)
- SMIME = False ; Siehe symmetrische Verschlüsselungsalgorithmen, die von Secure Multipurpose Internet Mail Extensions (S/MIME) verwendet werden können.
- Betreff = "E=$Mail, CN=$FQDN, OU=$OrganizationalUnit, O=$Organization, L=$City, S=$State, C=$Country"
+  RequestType = PKCS10 ; Bestimmt den Standard, der zum Generieren und Senden der Zertifikatanforderung verwendet wird (PKCS10 – 1)
+  SMIME = False ; Siehe symmetrische Verschlüsselungsalgorithmen, die von Secure Multipurpose Internet Mail Extensions (S/MIME) verwendet werden können.
+  Subject = "E=$Mail, CN=$FQDN, OU=$OrganizationalUnit, O=$Organization, L=$City, S=$State, C=$Country"
   UseExistingKeySet = FALSE
- UserProtected = FALSCH
+  UserProtected = FALSE
 
   [Extensions]
   ; If your client operating system is Windows Server 2008, Windows Server 2008 R2, Windows Vista, or Windows 7
