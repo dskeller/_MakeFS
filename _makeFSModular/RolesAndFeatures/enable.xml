@@ -1,0 +1,16 @@
+<config>
+<raf>FS-Fileserver</raf>
+<raf>FS-SyncShareService</raf>
+<raf>FS-Resource-Manager</raf>
+<raf>DHCP</raf>
+<raf>Print-Server</raf>
+<raf>Web-Mgmt-Console</raf>
+<raf>Web-Scripting-Tools</raf>
+<raf>RSAT-DHCP</raf>
+<raf>RSAT-FSRM-Mgmt</raf>
+<raf>RSAT-Print-Services</raf>
+<raf>RSAT-ADDS-Tools</raf>
+<raf>RSAT-AD-PowerShell</raf>
+<raf>GPMC</raf>
+<raf>Remote-Assistance</raf>
+</config>
