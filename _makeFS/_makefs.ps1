@@ -380,32 +380,33 @@ if (($Certificate.IsPresent -eq $true) -or ($All.IsPresent -eq $true)) {
   $REQFile = $logfolder + '\' + $FQDN + '_' + $((Get-Date).ToString('yyyyMMdd')) + '_CSR.REQ'
 
   $Signature = '$Windows NT$'
-  $SANList = @("dns=$CertName")
+  $SANList = @("dns=$($env:computerName)")
 
   $INF = @"
   [Version]
   Signature= "$Signature"
 
   [NewRequest]
-  Exportable = TRUE ; TRUE = Privater Schlüssel ist exportierbar
-  KeyLength = 256 ; Gültige Schlüsselgrößen: 256.384.512
-  KeySpec = 1 ; Schlüsselaustausch – Für die Verschlüsselung erforderlich
-  MachineKeySet = TRUE ; Der Standardwert ist false.
-  PrivateKeyArchive = FALSE ; Die Einstellung PrivateKeyArchive funktioniert nur, wenn der entsprechende RequestType auf "CMC" gesetzt ist.
-  ProviderName = "Microsoft Software Key Storage Provider"
-  ProviderType = 23                                                      ; nistP256
-  RequestType = PKCS10 ; Bestimmt den Standard, der zum Generieren und Senden der Zertifikatanforderung verwendet wird (PKCS10 – 1)
-  SMIME = False ; Siehe symmetrische Verschlüsselungsalgorithmen, die von Secure Multipurpose Internet Mail Extensions (S/MIME) verwendet werden können.
+  Exportable = TRUE                                        ; Private Key is exportable
+  KeyAlgorithm = ECDH_P256                                 ; Algorithm used to generate certificate request
+  KeyLength = 256                                          ; Valid lengths: 256, 384, 512
+  KeySpec = AT_KEYEXCHANGE                                 ; Key can be used for encryption
+  MachineKeySet = TRUE                                     ; Key is for machine and not for user.
+  PrivateKeyArchive = FALSE                                ; no private key transfer to ca
+  ProviderName = "Microsoft Software Key Storage Provider" ; provider name of the used CSP
+  ProviderType = 23                                        ; nistP256
+  RequestType = PKCS10                                     ; standard used to generate certificate request
+  SMIME = FALSE                                            ; certificate is not used for S/MIME
   Subject = "E=$Mail, CN=$FQDN, OU=$OrganizationalUnit, O=$Organization, L=$City, S=$State, C=$Country"
-  UseExistingKeySet = FALSE
-  UserProtected = FALSE
-
+  UseExistingKeySet = FALSE                                ; 
+  UserProtected = FALSE                                    ; 
   [Extensions]
   ; If your client operating system is Windows Server 2008, Windows Server 2008 R2, Windows Vista, or Windows 7
   ; SANs can be included in the Extensions section by using the following text format. Note 2.5.29.17 is the OID for a SAN extension.
   ; Multiple alternative names must be separated by an ampersand (&).
   2.5.29.17 = "{text}"
 "@
+  $INF += "`r`n"
   $SANList | ForEach-Object { $INF += "_continue_ = `"$($_)&`"`r`n" }
   $INF += "`r`n; EOF`r`n"
 
