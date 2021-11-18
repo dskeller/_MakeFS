@@ -134,6 +134,7 @@ if (-not (Test-Path "$logfolder")) {
 }
 
 Write-Log -message "Starting script execution" -level INFO
+Write-Log -message "Skript ist $($MyInvocation.MyCommand.Definition)" -level INFO
 Write-Log -message "Log files location is: $logfolder" -level INFO
 
 #region serverlog
