@@ -78,7 +78,7 @@ param (
 #
 $logfolder = "C:\logs\Migration"
 $LogFile = $logfolder + "\" + $($($MyInvocation.MyCommand.Name).Replace('.ps1', '.log'))
-$roboparams = @('/COPYALL', '/MIR', '/MT:128', '/COPY:DATSOU', '/DCOPY:DAT', '/DST', '/R:1', '/W:2', '/NC', '/NP', '/J', '/SEC', '/ZB', '/BYTES', '/XF Sync-UserProfile.log Thumbs.db ~$* ~*.tmp ~*.wbk fbc*.tmp', '/XD profile.v2 $MfeDeepRem $Recycle.Bin')
+$roboparams = @('/COPYALL', '/MIR', '/MT:128', '/COPY:DATSOU', '/DCOPY:DAT', '/DST', '/R:1', '/W:2', '/NC', '/NP', '/J', '/SEC', '/ZB', '/BYTES', '/XF Sync-UserProfile.log Thumbs.db ~$* ~*.tmp ~*.wbk fbc*.tmp', '/XD profile.v2 $MfeDeepRem $Recycle.Bin "System Volume Information"')
 $serverlogfile = $env:ProgramData + "\Microsoft\Windows\Start Menu\Programs\StartUp\serverlog.txt"
 $serverlogheadercontent = Get-Content -Path $serverlogheader
 
@@ -244,6 +244,7 @@ if (($FileService.IsPresent -eq $true) -or ($All.IsPresent -eq $true)) {
     else {
       #get share on old server
       $oShare = Get-CimInstance -ComputerName $oldserver -ClassName win32_share -Filter "Name = '$share'"
+      if ($oShare -eq $null){break} # exit if unable to get share from old server
       #folder name and description
       $folder = Split-Path $($oShare.Path) -Leaf
       $description = $oShare.Description
@@ -251,6 +252,8 @@ if (($FileService.IsPresent -eq $true) -or ($All.IsPresent -eq $true)) {
       #if complete disks (administrative Shares [LW]$) are copied
       if ($folder -match '([A-Z]|[a-z])\:\\' ) {
         $folder = $folder.TrimEnd(':\')
+        $lw = $folder
+        $folder = ""
         $createshare = $false
       }
 
@@ -261,8 +264,8 @@ if (($FileService.IsPresent -eq $true) -or ($All.IsPresent -eq $true)) {
       $sDate = Get-Date -Format yyyy-MM-dd_hh-mm
 
       # log file for each share
-      if ($folder.Length -eq 1) {
-        $rLogFile = $logfolder + "\" + $sDate + "_disk_" + $folder + ".log"
+      if ($folder.Length -eq 0) {
+        $rLogFile = $logfolder + "\" + $sDate + "_disk_" + $lw + ".log"
       }
       else {
         $rLogFile = $logfolder + "\" + $sDate + "_" + $folder + ".log"
@@ -381,7 +384,7 @@ if (($Certificate.IsPresent -eq $true) -or ($All.IsPresent -eq $true)) {
   $REQFile = $logfolder + '\' + $FQDN + '_' + $((Get-Date).ToString('yyyyMMdd')) + '_CSR.REQ'
 
   $Signature = '$Windows NT$'
-  $SANList = @("dns=$($env:computerName)")
+  $SANList = @("dns=$FQDN")
 
   $INF = @"
   [Version]
