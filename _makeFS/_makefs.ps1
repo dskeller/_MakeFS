@@ -244,7 +244,7 @@ if (($FileService.IsPresent -eq $true) -or ($All.IsPresent -eq $true)) {
     else {
       #get share on old server
       $oShare = Get-CimInstance -ComputerName $oldserver -ClassName win32_share -Filter "Name = '$share'"
-      if ($oShare -eq $null){break} # exit if unable to get share from old server
+      if ($null -eq $oShare){break} # exit if unable to get share from old server
       #folder name and description
       $folder = Split-Path $($oShare.Path) -Leaf
       $description = $oShare.Description
