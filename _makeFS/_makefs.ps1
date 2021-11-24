@@ -78,7 +78,7 @@ param (
 #
 $logfolder = "C:\logs\Migration"
 $LogFile = $logfolder + "\" + $($($MyInvocation.MyCommand.Name).Replace('.ps1', '.log'))
-$roboparams = @('/COPYALL', '/MIR', '/MT:128', '/COPY:DATSOU', '/DCOPY:DAT', '/DST', '/R:1', '/W:2', '/NC', '/NP', '/J', '/SEC', '/ZB', '/BYTES', '/XF Sync-UserProfile.log Thumbs.db ~$* ~*.tmp ~*.wbk fbc*.tmp', '/XD profile.v2 $MfeDeepRem $Recycle.Bin "System Volume Information"')
+$roboparams = @('/COPYALL', '/MIR', '/MT:128', '/COPY:DATSOU', '/DCOPY:DAT', '/DST', '/R:1', '/W:2', '/NC', '/NP', '/J', '/SEC', '/ZB', '/BYTES', '/XF Sync-UserProfile.log Thumbs.db ~$* ~*.tmp ~*.wbk fbc*.tmp', '/XD profile.v2 $MfeDeepRem $Recycle.Bin "System Volume Information" SyncShareState Workfolders')
 $serverlogfile = $env:ProgramData + "\Microsoft\Windows\Start Menu\Programs\StartUp\serverlog.txt"
 $serverlogheadercontent = Get-Content -Path $serverlogheader
 
