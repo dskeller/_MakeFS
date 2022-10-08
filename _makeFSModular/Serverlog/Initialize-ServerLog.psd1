@@ -6,67 +6,67 @@
 
 @{
 
-# Script module or binary module file associated with this manifest.
-RootModule = 'Initialize-ServerLog.psm1'
+    # Script module or binary module file associated with this manifest.
+    RootModule             = 'Initialize-ServerLog.psm1'
 
-# Version number of this module.
-ModuleVersion = '1.0'
+    # Version number of this module.
+    ModuleVersion          = '1.0'
 
-# Supported PSEditions
-CompatiblePSEditions = 'Desktop', 'Core'
+    # Supported PSEditions
+    CompatiblePSEditions   = @('Desktop', 'Core')
 
-# ID used to uniquely identify this module
-GUID = 'ab1a9cee-f5a6-4de9-b0d7-02e87ce6f062'
+    # ID used to uniquely identify this module
+    GUID                   = 'ab1a9cee-f5a6-4de9-b0d7-02e87ce6f062'
 
-# Author of this module
-Author = 'dskeller'
+    # Author of this module
+    Author                 = 'dskeller'
 
-# Copyright statement for this module
-Copyright = '2021 by dskeller'
+    # Copyright statement for this module
+    Copyright              = '2021 by dskeller'
 
-# Description of the functionality provided by this module
-Description = 'Module to create server log file'
+    # Description of the functionality provided by this module
+    Description            = 'Module to create server log file'
 
-# Minimum version of the PowerShell engine required by this module
-PowerShellVersion = '5.0'
+    # Minimum version of the PowerShell engine required by this module
+    PowerShellVersion      = '5.0'
 
-# Minimum version of Microsoft .NET Framework required by this module. This prerequisite is valid for the PowerShell Desktop edition only.
-DotNetFrameworkVersion = '4.7.2'
+    # Minimum version of Microsoft .NET Framework required by this module. This prerequisite is valid for the PowerShell Desktop edition only.
+    DotNetFrameworkVersion = '4.7.2'
 
-# Minimum version of the common language runtime (CLR) required by this module. This prerequisite is valid for the PowerShell Desktop edition only.
-ClrVersion = '4.0'
+    # Minimum version of the common language runtime (CLR) required by this module. This prerequisite is valid for the PowerShell Desktop edition only.
+    ClrVersion             = '4.0'
 
-# Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
-FunctionsToExport = '*'
+    # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
+    FunctionsToExport      = '*'
 
-# Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
-CmdletsToExport = '*'
+    # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
+    CmdletsToExport        = '*'
 
-# Variables to export from this module
-VariablesToExport = '*'
+    # Variables to export from this module
+    VariablesToExport      = '*'
 
-# Aliases to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no aliases to export.
-AliasesToExport = '*'
+    # Aliases to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no aliases to export.
+    AliasesToExport        = '*'
 
-# List of all modules packaged with this module
-ModuleList = @('Initialize-ServerLog')
+    # List of all modules packaged with this module
+    ModuleList             = @('Initialize-ServerLog')
 
-# List of all files packaged with this module
-FileList = 'Initialize-ServerLog.psm1', 'Initialize-ServerLog.psd1'
+    # List of all files packaged with this module
+    FileList               = 'Initialize-ServerLog.psm1', 'Initialize-ServerLog.psd1'
 
-# Private data to pass to the module specified in RootModule/ModuleToProcess. This may also contain a PSData hashtable with additional module metadata used by PowerShell.
-PrivateData = @{
+    # Private data to pass to the module specified in RootModule/ModuleToProcess. This may also contain a PSData hashtable with additional module metadata used by PowerShell.
+    PrivateData            = @{
 
-    PSData = @{
+        PSData = @{
 
-        # Tags applied to this module. These help with module discovery in online galleries.
-        Tags = 'MakeFS'
+            # Tags applied to this module. These help with module discovery in online galleries.
+            Tags       = 'MakeFS'
 
-        # A URL to the main website for this project.
-        ProjectUri = 'https://github.com/dskeller/_MakeFS'
+            # A URL to the main website for this project.
+            ProjectUri = 'https://github.com/dskeller/_MakeFS'
 
-        # ReleaseNotes of this module
-        # ReleaseNotes = ''
+            # ReleaseNotes of this module
+            # ReleaseNotes = ''
+        }
     }
-}
 }
